@@ -53,7 +53,7 @@ const SystemArchitectureMap = () => {
     'master-exec-report': { volume: 'low', frequency: 'hourly', records: 25 }
   };
 
-  // Nodes with enhanced descriptions
+  // Nodes with enhanced descriptions - adjusted positions for better spacing
   const allNodes = [
     // Master Tracker - Center
     {
@@ -62,7 +62,7 @@ const SystemArchitectureMap = () => {
       subtitle: 'Single Source of Truth',
       description: 'Centralized database maintaining data integrity across all operations. One row per work order line.',
       metrics: ['25 Columns', '7K Active Rows', '20K Capacity', '99.9% Uptime'],
-      position: { x: 50, y: 50 },
+      position: { x: 50, y: 52 },
       size: 'xlarge',
       icon: <Database className="w-12 h-12" />,
       color: colors.primary,
@@ -70,14 +70,14 @@ const SystemArchitectureMap = () => {
       permissions: ['Admin', 'Editor', 'Viewer']
     },
     
-    // Input Layer - Left
+    // Input Layer - Left (spread out more)
     {
       id: 'production-team',
       name: 'Production Team',
       subtitle: 'Direct Editors',
       description: 'Operations team with direct edit access for real-time updates',
       metrics: ['Real-time Updates', 'Production Metrics'],
-      position: { x: 15, y: 25 },
+      position: { x: 10, y: 25 },
       icon: <Users className="w-8 h-8" />,
       color: colors.success,
       accessUrl: 'https://app.smartsheet.com/sheets/production-team'
@@ -88,7 +88,7 @@ const SystemArchitectureMap = () => {
       subtitle: 'Direct Editors',
       description: 'QA team managing investigations and deviations',
       metrics: ['Deviation Tracking', 'Investigation Management'],
-      position: { x: 15, y: 50 },
+      position: { x: 10, y: 50 },
       icon: <Shield className="w-8 h-8" />,
       color: colors.warning,
       accessUrl: 'https://app.smartsheet.com/sheets/quality-team'
@@ -99,20 +99,20 @@ const SystemArchitectureMap = () => {
       subtitle: 'Direct Editors',
       description: 'Revenue and client relationship management',
       metrics: ['Revenue Tracking', 'Client Analysis'],
-      position: { x: 15, y: 75 },
+      position: { x: 10, y: 75 },
       icon: <TrendingUp className="w-8 h-8" />,
       color: colors.accent,
       accessUrl: 'https://app.smartsheet.com/sheets/business-analysts'
     },
     
-    // Child Sheets - Left Middle
+    // Child Sheets - Left Middle (spread out more)
     {
       id: 'production-child',
       name: 'Production Sheet',
       subtitle: 'Copy-Row Automation',
       description: 'Filtered view for production team',
       metrics: ['Auto-Updated', 'Team Specific View'],
-      position: { x: 35, y: 20 },
+      position: { x: 30, y: 20 },
       icon: <GitBranch className="w-8 h-8" />,
       color: colors.success,
       accessUrl: 'https://app.smartsheet.com/sheets/production-child'
@@ -123,7 +123,7 @@ const SystemArchitectureMap = () => {
       subtitle: 'Copy-Row Automation',
       description: 'Filtered view for quality team',
       metrics: ['QA Specific Data', 'Investigation Tracking'],
-      position: { x: 35, y: 40 },
+      position: { x: 30, y: 40 },
       icon: <CheckCircle className="w-8 h-8" />,
       color: colors.warning,
       accessUrl: 'https://app.smartsheet.com/sheets/quality-child'
@@ -134,7 +134,7 @@ const SystemArchitectureMap = () => {
       subtitle: 'Copy-Row Automation',
       description: 'Client-specific filtered views',
       metrics: ['Multiple Clients', 'Revenue Tracking'],
-      position: { x: 35, y: 60 },
+      position: { x: 30, y: 60 },
       icon: <Network className="w-8 h-8" />,
       color: colors.accent,
       accessUrl: 'https://app.smartsheet.com/sheets/client-sheets'
@@ -145,20 +145,20 @@ const SystemArchitectureMap = () => {
       subtitle: 'Move-Row Weekly',
       description: 'Completed work orders archive',
       metrics: ['Weekly Archive', 'Performance Optimization'],
-      position: { x: 35, y: 80 },
+      position: { x: 30, y: 80 },
       icon: <FileText className="w-8 h-8" />,
       color: colors.neutral,
       accessUrl: 'https://app.smartsheet.com/sheets/archive'
     },
     
-    // Reports - Right Middle
+    // Reports - Right Middle (spread out more)
     {
       id: 'dds-report',
       name: 'DDS Report',
       subtitle: 'Critical Items Only',
       description: 'Red status items for shift meetings',
       metrics: ['15-min Meetings', 'Safety Focus'],
-      position: { x: 65, y: 20 },
+      position: { x: 70, y: 20 },
       icon: <AlertTriangle className="w-8 h-8" />,
       color: colors.danger,
       accessUrl: 'https://app.smartsheet.com/reports/dds-report'
@@ -169,7 +169,7 @@ const SystemArchitectureMap = () => {
       subtitle: 'Due Actions Focus',
       description: 'Daily accountability tracking',
       metrics: ['Due Today Items', 'Action Tracking'],
-      position: { x: 65, y: 40 },
+      position: { x: 70, y: 40 },
       icon: <Target className="w-8 h-8" />,
       color: colors.warning,
       accessUrl: 'https://app.smartsheet.com/reports/action-report'
@@ -180,7 +180,7 @@ const SystemArchitectureMap = () => {
       subtitle: 'At-Risk Analysis',
       description: 'Bi-weekly revenue reviews',
       metrics: ['Revenue Tracking', 'Risk Analysis'],
-      position: { x: 65, y: 60 },
+      position: { x: 70, y: 60 },
       icon: <DollarSign className="w-8 h-8" />,
       color: colors.primary,
       accessUrl: 'https://app.smartsheet.com/reports/revenue-report'
@@ -191,20 +191,20 @@ const SystemArchitectureMap = () => {
       subtitle: 'Leadership KPIs',
       description: 'Strategic decision support',
       metrics: ['Key Metrics', 'Strategic View'],
-      position: { x: 65, y: 80 },
+      position: { x: 70, y: 80 },
       icon: <BarChart3 className="w-8 h-8" />,
       color: colors.primaryLight,
       accessUrl: 'https://app.smartsheet.com/reports/exec-report'
     },
     
-    // Dashboards - Far Right
+    // Dashboards - Far Right (spread out more)
     {
       id: 'production-dashboard',
       name: 'Production Dashboard',
       subtitle: 'Smartsheet Sights',
       description: 'Real-time production metrics',
       metrics: ['Live Updates', 'Visual KPIs'],
-      position: { x: 85, y: 25 },
+      position: { x: 90, y: 25 },
       icon: <Activity className="w-8 h-8" />,
       color: colors.success,
       accessUrl: 'https://app.smartsheet.com/dashboards/production'
@@ -215,7 +215,7 @@ const SystemArchitectureMap = () => {
       subtitle: 'Smartsheet Sights',
       description: 'Quality metrics visualization',
       metrics: ['Trend Analysis', 'QA Metrics'],
-      position: { x: 85, y: 45 },
+      position: { x: 90, y: 45 },
       icon: <PieChart className="w-8 h-8" />,
       color: colors.warning,
       accessUrl: 'https://app.smartsheet.com/dashboards/quality'
@@ -226,19 +226,19 @@ const SystemArchitectureMap = () => {
       subtitle: 'Smartsheet Sights',
       description: 'Revenue and client metrics',
       metrics: ['Client Views', 'Revenue Trends'],
-      position: { x: 85, y: 65 },
+      position: { x: 90, y: 65 },
       icon: <TrendingUp className="w-8 h-8" />,
       color: colors.accent,
       accessUrl: 'https://app.smartsheet.com/dashboards/business'
     },
     
-    // Meetings - Top
+    // Meetings - Top (spread out)
     {
       id: 'dds-meeting',
       name: 'DDS/SQDCP',
       subtitle: '15-min Daily',
       description: 'Safety and critical issues',
-      position: { x: 30, y: 5 },
+      position: { x: 25, y: 10 },
       size: 'small',
       icon: <Calendar className="w-6 h-6" />,
       color: colors.danger,
@@ -249,7 +249,7 @@ const SystemArchitectureMap = () => {
       name: 'Action Huddle',
       subtitle: '30-min Daily',
       description: 'Due actions review',
-      position: { x: 50, y: 5 },
+      position: { x: 50, y: 10 },
       size: 'small',
       icon: <Clock className="w-6 h-6" />,
       color: colors.warning,
@@ -260,20 +260,20 @@ const SystemArchitectureMap = () => {
       name: 'Revenue Review',
       subtitle: 'Bi-weekly',
       description: 'Revenue analysis meeting',
-      position: { x: 70, y: 5 },
+      position: { x: 75, y: 10 },
       size: 'small',
       icon: <DollarSign className="w-6 h-6" />,
       color: colors.primary,
       schedule: 'Tue/Thu 2:00 PM'
     },
     
-    // Automations - Bottom
+    // Automations - Bottom (spread out)
     {
       id: 'daily-reminders',
       name: 'Daily Reminders',
       subtitle: '8:00 AM',
       description: 'Automated update requests',
-      position: { x: 30, y: 95 },
+      position: { x: 30, y: 90 },
       size: 'small',
       icon: <Zap className="w-6 h-6" />,
       color: colors.warning,
@@ -284,7 +284,7 @@ const SystemArchitectureMap = () => {
       name: 'Critical Alerts',
       subtitle: 'Real-time',
       description: 'Red status escalations',
-      position: { x: 50, y: 95 },
+      position: { x: 50, y: 90 },
       size: 'small',
       icon: <AlertTriangle className="w-6 h-6" />,
       color: colors.danger,
@@ -295,7 +295,7 @@ const SystemArchitectureMap = () => {
       name: 'Overdue Alerts',
       subtitle: '6:00 AM',
       description: 'Past due notifications',
-      position: { x: 70, y: 95 },
+      position: { x: 70, y: 90 },
       size: 'small',
       icon: <Clock className="w-6 h-6" />,
       color: colors.warning,
@@ -480,8 +480,8 @@ const SystemArchitectureMap = () => {
     const strength = getConnectionStrength(connection.from, connection.to);
     const isHighlighted = selectedNode && (connection.from === selectedNode || connection.to === selectedNode);
     const isTraced = tracedPath && tracedPath.some(p => p.from === connection.from && p.to === connection.to);
-    const opacity = isTraced ? 0.9 : (selectedNode && !isHighlighted ? 0.25 : 0.6);
-    const strokeWidth = getStrokeWidth(strength.volume);
+    const opacity = isTraced ? 1 : (selectedNode && !isHighlighted ? 0.3 : 0.7);
+    const strokeWidth = getStrokeWidth(strength.volume) + (isHighlighted ? 1 : 0);
     
     const connectionId = `${connection.from}-${connection.to}`;
     const isHovered = hoveredConnection === connectionId;
@@ -492,14 +492,6 @@ const SystemArchitectureMap = () => {
     
     // Calculate angle for label rotation to follow line
     const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
-    const shouldFlip = Math.abs(angle) > 90;
-    const textAngle = shouldFlip ? angle + 180 : angle;
-    
-    // Offset label perpendicular to line to avoid overlap
-    const offsetDistance = 15; // pixels
-    const perpAngle = (angle + 90) * Math.PI / 180;
-    const labelOffsetX = Math.cos(perpAngle) * offsetDistance / 100;
-    const labelOffsetY = Math.sin(perpAngle) * offsetDistance / 100;
     
     return (
       <g key={connectionId}>
@@ -523,8 +515,8 @@ const SystemArchitectureMap = () => {
           x2={`${x2}%`}
           y2={`${y2}%`}
           stroke={isTraced ? colors.primaryLight : connection.color}
-          strokeWidth={isHovered ? strokeWidth + 2 : strokeWidth}
-          opacity={isHovered ? 0.8 : opacity}
+          strokeWidth={isHovered ? strokeWidth + 1 : strokeWidth}
+          opacity={isHovered ? 0.9 : opacity}
           strokeDasharray={connection.type === 'trigger' ? '5 3' : 'none'}
           markerEnd="url(#arrowhead)"
           style={{
@@ -534,45 +526,46 @@ const SystemArchitectureMap = () => {
         />
         
         {/* Connection label with background for readability */}
-        {(selectedNode && (connection.from === selectedNode || connection.to === selectedNode)) || isHovered || isTraced ? (
+        {(viewMode === 'overview' || isHighlighted || isHovered || isTraced) && (
           <g transform={`translate(${midX}%, ${midY}%)`}>
             {/* White background for text */}
             <rect
-              x="-35"
-              y="-12"
-              width="70"
-              height="24"
+              x="-28"
+              y="-9"
+              width="56"
+              height="18"
               fill="white"
               fillOpacity="0.95"
-              rx="4"
+              stroke={connection.color}
+              strokeWidth="0.5"
+              rx="9"
               style={{ filter: 'url(#dropShadow)' }}
             />
             <text
               x="0"
-              y="4"
+              y="3"
               textAnchor="middle"
-              className="text-xs font-medium select-none"
+              className="text-[10px] font-medium select-none"
               fill={connection.color}
-              transform={`rotate(${textAngle})`}
             >
               {connection.label}
             </text>
           </g>
-        ) : null}
+        )}
         
         {/* Connection details tooltip */}
-        {isHovered && (
+        {isHovered && viewMode === 'detailed' && (
           <foreignObject
             x={`${midX}%`}
             y={`${midY}%`}
-            width="200"
-            height="100"
-            style={{ transform: 'translate(-100px, -70px)', overflow: 'visible' }}
+            width="180"
+            height="80"
+            style={{ transform: 'translate(-90px, -60px)', overflow: 'visible' }}
             className="pointer-events-none"
           >
-            <div className="bg-white rounded-lg shadow-lg border p-3 text-xs" style={{ pointerEvents: 'none' }}>
+            <div className="bg-white rounded-lg shadow-lg border p-2.5 text-[11px]" style={{ pointerEvents: 'none' }}>
               <div className="font-semibold mb-1">{connection.label}</div>
-              <div className="text-gray-600">
+              <div className="text-gray-600 space-y-0.5">
                 <div>Volume: {strength.volume}</div>
                 <div>Frequency: {strength.frequency}</div>
                 <div>Records/sync: {strength.records}</div>
@@ -591,8 +584,9 @@ const SystemArchitectureMap = () => {
     const isSmall = node.size === 'small';
     const isSearchMatch = searchResults.some(result => result.id === node.id);
     
-    const width = isCore ? '18%' : isSmall ? '12%' : '15%';
-    const height = isCore ? '120px' : isSmall ? '80px' : '100px';
+    // Significantly reduced sizes
+    const width = isCore ? '140px' : isSmall ? '100px' : '120px';
+    const height = isCore ? '80px' : isSmall ? '60px' : '70px';
     
     // Update breadcrumbs when selecting nodes
     useEffect(() => {
@@ -611,13 +605,13 @@ const SystemArchitectureMap = () => {
         key={node.id}
         className={`absolute cursor-pointer transition-all duration-300 ${
           isSelected ? 'z-50' : isHovered ? 'z-40' : 'z-30'
-        } ${isSearchMatch ? 'ring-4 ring-yellow-400' : ''}`}
+        } ${isSearchMatch ? 'ring-2 ring-yellow-400' : ''}`}
         style={{ 
           left: `${node.position.x}%`,
           top: `${node.position.y}%`,
           transform: 'translate(-50%, -50%)',
           width: width,
-          minHeight: height,
+          height: height,
           position: 'absolute'
         }}
         onMouseEnter={() => setHoveredNode(node.id)}
@@ -626,42 +620,43 @@ const SystemArchitectureMap = () => {
         onContextMenu={(e) => handleContextMenu(e, node)}
       >
         <div 
-          className={`w-full h-full rounded-xl shadow-lg border-2 transition-all duration-300 ${
+          className={`w-full h-full rounded-lg shadow-md border transition-all duration-300 ${
             isSelected 
-              ? 'border-blue-500 shadow-2xl ring-4 ring-blue-200 scale-105' 
-              : 'border-gray-200 hover:border-gray-300 hover:shadow-xl'
-          } ${isCore ? 'bg-blue-50' : 'bg-white'} p-3 flex flex-col items-center justify-center relative`}
+              ? 'border-blue-500 shadow-xl ring-2 ring-blue-200 scale-110' 
+              : 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
+          } ${isCore ? 'bg-gradient-to-br from-blue-50 to-white' : 'bg-white'} p-2 flex flex-col items-center justify-center relative`}
         >
           <div 
-            className="p-2 rounded-lg mb-2"
+            className={`${isSmall ? 'p-1' : 'p-1.5'} rounded-md mb-1`}
             style={{ backgroundColor: `${node.color}15` }}
           >
             <div style={{ color: node.color }}>
-              {node.icon}
+              {isSmall ? 
+                React.cloneElement(node.icon, { className: 'w-4 h-4' }) : 
+                isCore ?
+                React.cloneElement(node.icon, { className: 'w-8 h-8' }) :
+                React.cloneElement(node.icon, { className: 'w-6 h-6' })
+              }
             </div>
           </div>
           
-          <h3 className={`font-bold text-gray-900 text-center ${isSmall ? 'text-xs' : 'text-sm'}`}>
+          <h3 className={`font-semibold text-gray-900 text-center leading-tight ${
+            isSmall ? 'text-[10px]' : isCore ? 'text-xs' : 'text-[11px]'
+          }`}>
             {node.name}
           </h3>
-          <p className={`text-gray-600 text-center ${isSmall ? 'text-xs' : 'text-xs'}`}>
-            {node.subtitle}
-          </p>
           
-          {viewMode === 'detailed' && node.metrics && !isSmall && (
-            <div className="flex flex-col gap-1 mt-2 text-xs">
-              {node.metrics.slice(0, 2).map((metric, idx) => (
-                <div key={idx} className="text-center">
-                  <div className="text-gray-600">{metric}</div>
-                </div>
-              ))}
-            </div>
+          {/* Only show subtitle in detailed view or for core node */}
+          {(viewMode === 'detailed' || isCore) && !isSmall && (
+            <p className="text-[10px] text-gray-500 text-center leading-tight mt-0.5">
+              {node.subtitle}
+            </p>
           )}
           
           {/* Central Hub label for Master Tracker */}
           {isCore && (
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-              <div className="bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-medium shadow-md">
+            <div className="absolute -bottom-1.5 left-1/2 transform -translate-x-1/2">
+              <div className="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm whitespace-nowrap">
                 Central Hub
               </div>
             </div>
@@ -669,7 +664,7 @@ const SystemArchitectureMap = () => {
         </div>
         
         {/* Tooltip */}
-        {isHovered && !isSmall && !isSelected && (
+        {isHovered && !isSelected && (
           <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 p-3 bg-white text-gray-800 rounded-lg shadow-xl border w-64"
             style={{ zIndex: 100 }}
           >
@@ -685,7 +680,7 @@ const SystemArchitectureMap = () => {
                 ))}
               </div>
             )}
-            <div className="text-xs text-gray-500 mt-2">Right-click for options</div>
+            <div className="text-xs text-gray-500 mt-2">Click for details • Right-click for options</div>
           </div>
         )}
       </div>
@@ -711,21 +706,21 @@ const SystemArchitectureMap = () => {
             <div className="flex items-center space-x-4">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                 <input
                   id="search-input"
                   type="text"
                   placeholder="Search components... (Ctrl+K)"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+                  className="pl-8 pr-4 py-1 text-xs border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-56"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    className="absolute right-2.5 top-1/2 transform -translate-y-1/2"
                   >
-                    <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                    <X className="w-3.5 h-3.5 text-gray-400 hover:text-gray-600" />
                   </button>
                 )}
               </div>
@@ -791,17 +786,17 @@ const SystemArchitectureMap = () => {
               {/* Export buttons */}
               <button
                 onClick={handleExportDiagram}
-                className="flex items-center space-x-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center space-x-1.5 px-2.5 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 title="Export Diagram (Ctrl+E)"
               >
-                <Download className="w-4 h-4" />
+                <Download className="w-3.5 h-3.5" />
                 <span>Export</span>
               </button>
               <button
                 onClick={handleGenerateDocs}
-                className="flex items-center space-x-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center space-x-1.5 px-2.5 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <FileText className="w-4 h-4" />
+                <FileText className="w-3.5 h-3.5" />
                 <span>Docs</span>
               </button>
             </div>
@@ -809,12 +804,12 @@ const SystemArchitectureMap = () => {
           
           {/* Breadcrumbs */}
           {breadcrumbs.length > 0 && (
-            <div className="flex items-center space-x-2 mt-3 text-sm text-gray-600">
-              <span>Path:</span>
+            <div className="flex items-center space-x-1.5 mt-2 text-xs text-gray-600">
+              <span className="text-[11px]">Path:</span>
               {breadcrumbs.map((crumb, idx) => (
                 <React.Fragment key={crumb.id}>
-                  {idx > 0 && <ChevronRight className="w-4 h-4" />}
-                  <span className="font-medium text-gray-900">{crumb.name}</span>
+                  {idx > 0 && <ChevronRight className="w-3 h-3" />}
+                  <span className="font-medium text-gray-900 text-[11px]">{crumb.name}</span>
                 </React.Fragment>
               ))}
             </div>
@@ -825,27 +820,24 @@ const SystemArchitectureMap = () => {
       {/* Main Visualization Area */}
       <div className="flex-1 relative overflow-hidden">
         {/* SVG for connections - Fixed layering and visibility */}
-        <svg
-  className="absolute inset-0 w-full h-full pointer-events-none z-10"
->
-
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
           <defs>
             <marker
               id="arrowhead"
-              markerWidth="10"
-              markerHeight="7"
-              refX="9"
-              refY="3.5"
+              markerWidth="8"
+              markerHeight="6"
+              refX="7"
+              refY="3"
               orient="auto"
               fill="currentColor"
             >
               <polygon
-                points="0 0, 10 3.5, 0 7"
+                points="0 0, 8 3, 0 6"
                 opacity="0.8"
               />
             </marker>
             <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="1" stdDeviation="2" floodOpacity="0.2"/>
+              <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodOpacity="0.15"/>
             </filter>
           </defs>
           <g className="connections-layer">
@@ -856,39 +848,39 @@ const SystemArchitectureMap = () => {
         {/* Render all nodes */}
         {allNodes.map(renderNode)}
 
-        {/* Section Labels */}
-        <div className="absolute top-[15%] left-[5%] text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        {/* Section Labels - smaller and more subtle */}
+        <div className="absolute top-[13%] left-[10%] text-[10px] font-medium text-gray-400 uppercase tracking-wide">
           Data Input
         </div>
-        <div className="absolute top-[15%] left-[35%] text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <div className="absolute top-[13%] left-[30%] text-[10px] font-medium text-gray-400 uppercase tracking-wide">
           Data Views
         </div>
-        <div className="absolute top-[15%] right-[30%] text-xs font-semibold text-gray-500 uppercase tracking-wider">
-          Live Reports
+        <div className="absolute top-[13%] right-[28%] text-[10px] font-medium text-gray-400 uppercase tracking-wide">
+          Reports
         </div>
-        <div className="absolute top-[15%] right-[10%] text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <div className="absolute top-[13%] right-[8%] text-[10px] font-medium text-gray-400 uppercase tracking-wide">
           Dashboards
         </div>
-        <div className="absolute bottom-[15%] left-[50%] transform -translate-x-1/2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-          Native Automations
+        <div className="absolute bottom-[12%] left-[50%] transform -translate-x-1/2 text-[10px] font-medium text-gray-400 uppercase tracking-wide">
+          Automations
         </div>
-        <div className="absolute top-[3%] left-[50%] transform -translate-x-1/2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <div className="absolute top-[5%] left-[50%] transform -translate-x-1/2 text-[10px] font-medium text-gray-400 uppercase tracking-wide">
           Meeting Cadence
         </div>
 
-        {/* System Architecture Info Panel */}
+        {/* System Architecture Info Panel - more compact */}
         {showStats && (
-          <div className="absolute top-20 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-4 z-40 w-64">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-sm text-gray-700">System Architecture</h3>
+          <div className="absolute top-20 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-3 z-40 w-56">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-xs text-gray-700">System Architecture</h3>
               <button
                 onClick={() => setShowStats(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3 h-3" />
               </button>
             </div>
-            <div className="space-y-2 text-sm">
+            <div className="space-y-1.5 text-[11px]">
               <div className="flex justify-between">
                 <span className="text-gray-600">Database Columns:</span>
                 <span className="font-medium">{systemInfo.totalColumns}</span>
@@ -905,7 +897,7 @@ const SystemArchitectureMap = () => {
                 <span className="text-gray-600">Update Frequency:</span>
                 <span className="font-medium">{systemInfo.updateFrequency}</span>
               </div>
-              <div className="pt-2 border-t">
+              <div className="pt-1.5 border-t">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Data Retention:</span>
                   <span className="font-medium">{systemInfo.dataRetention}</span>
@@ -934,108 +926,94 @@ const SystemArchitectureMap = () => {
           </button>
         )}
 
-        {/* Legend */}
-        <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-4 z-40">
-          <h3 className="font-semibold text-sm text-gray-700 mb-3">Connection Types</h3>
-          <div className="space-y-2 text-xs">
+        {/* Legend - more compact */}
+        <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-3 z-40">
+          <h3 className="font-semibold text-xs text-gray-700 mb-2">Connection Types</h3>
+          <div className="space-y-1.5 text-[10px]">
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-0.5 bg-green-500"></div>
+              <div className="w-3 h-0.5 bg-green-500"></div>
               <span className="text-gray-600">User Editing</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-0.5 bg-blue-500"></div>
+              <div className="w-3 h-0.5 bg-blue-500"></div>
               <span className="text-gray-600">Copy/Move Row</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-0.5 bg-teal-500"></div>
+              <div className="w-3 h-0.5 bg-teal-500"></div>
               <span className="text-gray-600">Live Filter</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-0.5 bg-amber-500"></div>
+              <div className="w-3 h-0.5 bg-amber-500"></div>
               <span className="text-gray-600">Dashboard Widget</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-0.5 border-t-2 border-dashed border-red-500"></div>
-              <span className="text-gray-600">Automation Trigger</span>
+              <div className="w-3 h-0.5 border-t-2 border-dashed border-red-500"></div>
+              <span className="text-gray-600">Automation</span>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t">
-            <div className="text-xs text-gray-600 font-medium mb-2">Connection Volume</div>
-            <div className="space-y-1 text-xs text-gray-600">
-              <div className="flex items-center space-x-2">
-                <div className="w-4" style={{ height: '4px', backgroundColor: '#6B7280' }}></div>
-                <span>High volume</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-4" style={{ height: '3px', backgroundColor: '#6B7280' }}></div>
-                <span>Medium volume</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-4" style={{ height: '2px', backgroundColor: '#6B7280' }}></div>
-                <span>Low volume</span>
-              </div>
-            </div>
+          <div className="mt-2 pt-2 border-t">
+            <div className="text-[10px] text-gray-600 font-medium mb-1">Line Thickness = Volume</div>
           </div>
         </div>
 
-        {/* Context Menu */}
+        {/* Context Menu - more compact */}
         {contextMenu && (
           <div 
-            className="absolute bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+            className="absolute bg-white rounded-lg shadow-lg border border-gray-200 py-1.5 z-50"
             style={{ left: contextMenu.x, top: contextMenu.y }}
             onMouseLeave={() => setContextMenu(null)}
           >
             <button
-              className="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 flex items-center space-x-2"
+              className="w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 flex items-center space-x-2"
               onClick={() => {
                 window.open(contextMenu.node.accessUrl, '_blank');
                 setContextMenu(null);
               }}
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="w-3 h-3" />
               <span>View in Smartsheet</span>
             </button>
             <button
-              className="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 flex items-center space-x-2"
+              className="w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 flex items-center space-x-2"
               onClick={() => {
                 console.log('View configuration for:', contextMenu.node.id);
                 setContextMenu(null);
               }}
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-3 h-3" />
               <span>View Configuration</span>
             </button>
             <button
-              className="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 flex items-center space-x-2"
+              className="w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 flex items-center space-x-2"
               onClick={() => {
                 navigator.clipboard.writeText(contextMenu.node.id);
                 setContextMenu(null);
               }}
             >
-              <FileText className="w-4 h-4" />
+              <FileText className="w-3 h-3" />
               <span>Copy Component ID</span>
             </button>
             {contextMenu.node.permissions && (
               <button
-                className="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 flex items-center space-x-2"
+                className="w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 flex items-center space-x-2"
                 onClick={() => {
                   console.log('View permissions for:', contextMenu.node.id);
                   setContextMenu(null);
                 }}
               >
-                <Shield className="w-4 h-4" />
+                <Shield className="w-3 h-3" />
                 <span>View Permissions</span>
               </button>
             )}
-            <div className="border-t my-2"></div>
+            <div className="border-t my-1"></div>
             <button
-              className="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 flex items-center space-x-2"
+              className="w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 flex items-center space-x-2"
               onClick={() => {
                 traceDataPath('production-team', 'production-dashboard');
                 setContextMenu(null);
               }}
             >
-              <GitBranch className="w-4 h-4" />
+              <GitBranch className="w-3 h-3" />
               <span>Trace Data Path</span>
             </button>
           </div>
@@ -1050,49 +1028,49 @@ const SystemArchitectureMap = () => {
               onClick={() => setSelectedNode(null)}
             />
             
-            {/* Popup Modal */}
-            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl border border-gray-200 p-6 z-50 max-w-2xl w-full mx-4">
-              <div className="flex items-start justify-between mb-4">
+            {/* Popup Modal - more compact */}
+            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl border border-gray-200 p-5 z-50 max-w-xl w-full mx-4">
+              <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center space-x-3">
                   <div 
-                    className="p-3 rounded-lg"
+                    className="p-2 rounded-lg"
                     style={{ backgroundColor: `${getNode(selectedNode)?.color}15` }}
                   >
                     <div style={{ color: getNode(selectedNode)?.color }}>
-                      {getNode(selectedNode)?.icon}
+                      {React.cloneElement(getNode(selectedNode)?.icon || <div />, { className: 'w-6 h-6' })}
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">{getNode(selectedNode)?.name}</h2>
-                    <p className="text-sm text-gray-600">{getNode(selectedNode)?.subtitle}</p>
+                    <h2 className="text-lg font-bold text-gray-900">{getNode(selectedNode)?.name}</h2>
+                    <p className="text-xs text-gray-600">{getNode(selectedNode)?.subtitle}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedNode(null)}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
               
-              <div className="mb-6">
-                <h3 className="font-semibold text-gray-700 mb-2">Description</h3>
-                <p className="text-gray-600">{getNode(selectedNode)?.description}</p>
+              <div className="mb-4">
+                <h3 className="font-semibold text-sm text-gray-700 mb-1">Description</h3>
+                <p className="text-xs text-gray-600">{getNode(selectedNode)?.description}</p>
               </div>
               
               {getNode(selectedNode)?.metrics && (
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-700 mb-2">Key Features</h3>
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="mb-4">
+                  <h3 className="font-semibold text-sm text-gray-700 mb-2">Key Features</h3>
+                  <div className="grid grid-cols-2 gap-2">
                     {getNode(selectedNode).metrics.map((metric, idx) => (
-                      <div key={idx} className="flex items-center space-x-2">
+                      <div key={idx} className="flex items-center space-x-1.5">
                         <div 
-                          className="w-2 h-2 rounded-full"
+                          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                           style={{ backgroundColor: getNode(selectedNode)?.color }}
                         />
-                        <span className="text-sm text-gray-600">{metric}</span>
+                        <span className="text-xs text-gray-600">{metric}</span>
                       </div>
                     ))}
                   </div>
@@ -1100,43 +1078,43 @@ const SystemArchitectureMap = () => {
               )}
               
               <div>
-                <h3 className="font-semibold text-gray-700 mb-3">System Connections</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <h3 className="font-semibold text-sm text-gray-700 mb-2">System Connections</h3>
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-600 mb-2">Incoming Data</h4>
-                    <div className="space-y-2">
+                    <h4 className="text-xs font-medium text-gray-600 mb-1.5">Incoming Data</h4>
+                    <div className="space-y-1">
                       {getVisibleConnections()
                         .filter(c => c.to === selectedNode)
                         .map((conn, idx) => (
-                          <div key={idx} className="flex items-center space-x-2 text-sm bg-gray-50 p-2 rounded">
+                          <div key={idx} className="flex items-center space-x-1.5 text-[11px] bg-gray-50 p-1.5 rounded">
                             <div 
-                              className="w-3 h-0.5"
+                              className="w-2.5 h-0.5 flex-shrink-0"
                               style={{ backgroundColor: conn.color }}
                             />
                             <span className="text-gray-700">{conn.label} from {getNode(conn.from)?.name}</span>
                           </div>
                         ))}
                       {getVisibleConnections().filter(c => c.to === selectedNode).length === 0 && (
-                        <p className="text-sm text-gray-500 italic">No incoming connections</p>
+                        <p className="text-[11px] text-gray-500 italic">No incoming connections</p>
                       )}
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-gray-600 mb-2">Outgoing Data</h4>
-                    <div className="space-y-2">
+                    <h4 className="text-xs font-medium text-gray-600 mb-1.5">Outgoing Data</h4>
+                    <div className="space-y-1">
                       {getVisibleConnections()
                         .filter(c => c.from === selectedNode)
                         .map((conn, idx) => (
-                          <div key={idx} className="flex items-center space-x-2 text-sm bg-gray-50 p-2 rounded">
+                          <div key={idx} className="flex items-center space-x-1.5 text-[11px] bg-gray-50 p-1.5 rounded">
                             <div 
-                              className="w-3 h-0.5"
+                              className="w-2.5 h-0.5 flex-shrink-0"
                               style={{ backgroundColor: conn.color }}
                             />
                             <span className="text-gray-700">{conn.label} to {getNode(conn.to)?.name}</span>
                           </div>
                         ))}
                       {getVisibleConnections().filter(c => c.from === selectedNode).length === 0 && (
-                        <p className="text-sm text-gray-500 italic">No outgoing connections</p>
+                        <p className="text-[11px] text-gray-500 italic">No outgoing connections</p>
                       )}
                     </div>
                   </div>
@@ -1146,20 +1124,19 @@ const SystemArchitectureMap = () => {
           </>
         )}
 
-        {/* Instructions */}
+        {/* Instructions - more compact */}
         {!selectedNode && (
-          <div className="absolute bottom-4 left-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-lg p-4 z-40 max-w-sm">
-            <div className="flex items-center space-x-3 mb-2">
-              <Info className="w-5 h-5" />
-              <span className="font-semibold">Interactive System Map</span>
+          <div className="absolute bottom-4 left-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg shadow-lg p-3 z-40 max-w-xs">
+            <div className="flex items-center space-x-2 mb-1">
+              <Info className="w-4 h-4 flex-shrink-0" />
+              <span className="font-semibold text-sm">Interactive System Map</span>
             </div>
-            <p className="text-sm text-blue-100">
-              The Master Tracker is the unified database at the center, connecting all teams and systems. Click any component to explore data flows.
+            <p className="text-xs text-blue-100 leading-relaxed">
+              The Master Tracker is the central database connecting all systems. Click components to explore data flows.
             </p>
-            <div className="mt-3 text-xs text-blue-200">
-              <div>• Right-click components for quick actions</div>
-              <div>• Use Ctrl+K to search</div>
-              <div>• Hover connections to see details</div>
+            <div className="mt-2 text-[10px] text-blue-200 space-y-0.5">
+              <div>• Right-click for quick actions</div>
+              <div>• Ctrl+K to search • Hover lines for details</div>
             </div>
           </div>
         )}
