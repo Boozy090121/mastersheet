@@ -7,6 +7,7 @@ const SystemArchitectureMap = () => {
   const [hoveredConnection, setHoveredConnection] = useState(null);
   const [viewMode, setViewMode] = useState('overview');
   const [flowView, setFlowView] = useState(false);
+  const [focusedFlow, setFocusedFlow] = useState(null); // null, 'production', 'quality', 'business'
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showStats, setShowStats] = useState(true);
@@ -354,43 +355,79 @@ const SystemArchitectureMap = () => {
             break;
         }
       } else if (e.key === 'Escape') {
-        setSelectedNode(null);
-        setTracedPath(null);
-        setContextMenu(null);
-        setSearchQuery('');
+        if (focusedFlow) {
+          setFocusedFlow(null);
+        } else {
+          setSelectedNode(null);
+          setTracedPath(null);
+          setContextMenu(null);
+          setSearchQuery('');
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
+  }, [focusedFlow]);
 
   // Search functionality
   useEffect(() => {
     if (searchQuery) {
-      const results = allNodes.filter(node => 
-        node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        node.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        node.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const results = allNodes.filter(node => {
+        const searchLower = searchQuery.toLowerCase();
+        return node.name.toLowerCase().includes(searchLower) ||
+               node.subtitle.toLowerCase().includes(searchLower) ||
+               node.description.toLowerCase().includes(searchLower);
+      });
       setSearchResults(results);
+      
+      // If in flow view with focused flow, clear the focus to show search results
+      if (flowView && focusedFlow && results.length > 0) {
+        setFocusedFlow(null);
+      }
     } else {
       setSearchResults([]);
     }
-  }, [searchQuery]);
+  }, [searchQuery, flowView, focusedFlow]);
+
+  // Update breadcrumbs when selecting nodes
+  useEffect(() => {
+    if (selectedNode) {
+      const selected = getNode(selectedNode);
+      if (selected) {
+        setBreadcrumbs([selected]);
+      }
+    } else {
+      setBreadcrumbs([]);
+    }
+  }, [selectedNode]);
 
   const getNode = (id) => allNodes.find(node => node.id === id);
 
   const getVisibleConnections = () => {
     let visibleConnections = connections;
 
+    // Filter by focused flow
+    if (focusedFlow) {
+      const flowNodes = {
+        production: ['production-team', 'master', 'production-child', 'dds-report', 'production-dashboard', 'dds-meeting'],
+        quality: ['quality-team', 'master', 'quality-child', 'action-report', 'quality-dashboard', 'action-huddle'],
+        business: ['bu-analysts', 'master', 'client-sheets', 'revenue-report', 'business-dashboard', 'revenue-review', 'exec-report']
+      };
+      
+      const relevantNodes = flowNodes[focusedFlow];
+      visibleConnections = connections.filter(conn => 
+        relevantNodes.includes(conn.from) && relevantNodes.includes(conn.to)
+      );
+    }
+
     // Filter by time view
     if (timeView === 'daily') {
-      visibleConnections = connections.filter(conn => 
+      visibleConnections = visibleConnections.filter(conn => 
         !conn.type.includes('trigger') || conn.from.includes('daily') || conn.from.includes('overdue')
       );
     } else if (timeView === 'weekly') {
-      visibleConnections = connections.filter(conn => 
+      visibleConnections = visibleConnections.filter(conn => 
         conn.to === 'archive-sheet' || conn.from === 'archive-sheet'
       );
     }
@@ -410,16 +447,31 @@ const SystemArchitectureMap = () => {
       );
     }
 
-    return viewMode === 'overview' 
-      ? visibleConnections.filter(conn => conn.from === 'master' || conn.to === 'master')
-      : visibleConnections;
+    if (!focusedFlow) {
+      return viewMode === 'overview' 
+        ? visibleConnections.filter(conn => conn.from === 'master' || conn.to === 'master')
+        : visibleConnections;
+    }
+
+    return visibleConnections;
+  };
+
+  const isNodeVisible = (nodeId) => {
+    if (!focusedFlow) return true;
+    
+    const flowNodes = {
+      production: ['production-team', 'master', 'production-child', 'dds-report', 'production-dashboard', 'dds-meeting', 'daily-reminders', 'red-alerts'],
+      quality: ['quality-team', 'master', 'quality-child', 'action-report', 'quality-dashboard', 'action-huddle', 'overdue-alerts'],
+      business: ['bu-analysts', 'master', 'client-sheets', 'revenue-report', 'business-dashboard', 'revenue-review', 'exec-report', 'archive-sheet']
+    };
+    
+    return flowNodes[focusedFlow].includes(nodeId);
   };
 
   const traceDataPath = (startNode, endNode) => {
-    // Simple pathfinding - in reality this would be more complex
     const path = [];
     
-    // Example: trace from production-team to production-dashboard
+    // Production flow
     if (startNode === 'production-team' && endNode === 'production-dashboard') {
       path.push(
         { from: 'production-team', to: 'master' },
@@ -428,8 +480,28 @@ const SystemArchitectureMap = () => {
         { from: 'dds-report', to: 'production-dashboard' }
       );
     }
+    // Quality flow
+    else if (startNode === 'quality-team' && endNode === 'quality-dashboard') {
+      path.push(
+        { from: 'quality-team', to: 'master' },
+        { from: 'master', to: 'quality-child' },
+        { from: 'master', to: 'action-report' },
+        { from: 'action-report', to: 'quality-dashboard' }
+      );
+    }
+    // Business flow
+    else if (startNode === 'bu-analysts' && endNode === 'business-dashboard') {
+      path.push(
+        { from: 'bu-analysts', to: 'master' },
+        { from: 'master', to: 'client-sheets' },
+        { from: 'master', to: 'revenue-report' },
+        { from: 'revenue-report', to: 'business-dashboard' }
+      );
+    }
     
     setTracedPath(path);
+    // Clear traced path after 5 seconds
+    setTimeout(() => setTracedPath(null), 5000);
   };
 
   const handleContextMenu = (e, node) => {
@@ -442,15 +514,101 @@ const SystemArchitectureMap = () => {
   };
 
   const handleExportDiagram = () => {
-    // In a real implementation, this would generate a PNG/SVG
-    console.log('Exporting diagram...');
-    alert('Diagram exported! (This would download a file in production)');
+    // Create a summary of the architecture
+    const summary = `PCI Pharma Services - Master Execution Tracker Architecture
+    
+System Overview:
+- Central Database: Master Execution Tracker (25 columns, 7K active rows, 20K capacity)
+- Data Input: 3 teams with direct edit access
+- Processing: 4 automated child sheets
+- Reporting: 4 live reports for different purposes
+- Visualization: 3 dashboards for different stakeholders
+- Meetings: 3 regular meeting cadences
+- Automations: 3 notification systems
+
+Data Flow:
+1. Teams input data directly into Master Tracker
+2. Child sheets automatically sync filtered views
+3. Reports pull live data for analysis
+4. Dashboards visualize metrics
+5. Meetings use reports for decision-making
+6. Automations send alerts based on triggers
+
+Key Features:
+- Single source of truth
+- Real-time synchronization
+- Role-based access control
+- Automated workflows
+- Performance optimization through archiving`;
+
+    // In production, this would generate a downloadable file
+    const blob = new Blob([summary], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'PCI_System_Architecture.txt';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleGenerateDocs = () => {
-    // In a real implementation, this would generate documentation
-    console.log('Generating documentation...');
-    alert('Documentation generated! (This would create a PDF/Word doc in production)');
+    // Generate detailed documentation
+    const docs = `# PCI Pharma Services System Architecture Documentation
+
+## Master Execution Tracker
+
+The Master Execution Tracker serves as the single source of truth for all operational data.
+
+### Key Components:
+
+#### Data Input Layer
+- **Production Team**: Direct database access for real-time production updates
+- **Quality Team**: Manages investigations, deviations, and compliance tracking
+- **Business Analysts**: Handles revenue tracking and client relationship data
+
+#### Processing Layer
+- **Production Sheet**: Filtered view with copy-row automation
+- **Quality Sheet**: QA-specific data with investigation tracking
+- **Client Sheets**: Segmented views for individual clients
+- **Archive Sheet**: Weekly archival of completed work orders
+
+#### Reporting Layer
+- **DDS Report**: Critical items for 15-minute daily safety meetings
+- **Action Report**: Daily accountability tracking
+- **Revenue Report**: Bi-weekly at-risk analysis
+- **Executive Report**: Strategic KPIs for leadership
+
+#### Visualization Layer
+- **Production Dashboard**: Real-time operational metrics
+- **Quality Dashboard**: Quality trends and compliance status
+- **Business Dashboard**: Revenue and client health metrics
+
+### Data Flow Patterns:
+1. **Production Flow**: Team → Master → Child Sheet → Report → Dashboard → Meeting
+2. **Quality Flow**: Team → Master → QA Sheet → Action Report → QA Dashboard → Huddle
+3. **Business Flow**: Analysts → Master → Client Views → Revenue Report → Business Dashboard
+
+### Automation Rules:
+- Daily reminders at 8:00 AM for pending updates
+- Real-time critical alerts for red status items
+- 6:00 AM notifications for overdue items
+
+### System Specifications:
+- Database Capacity: 20,000 rows
+- Active Records: ~7,000
+- Column Count: 25
+- Update Frequency: Real-time
+- Data Retention: 3 years
+- Archive Schedule: Weekly`;
+
+    // In production, this would generate a downloadable file
+    const blob = new Blob([docs], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'PCI_Architecture_Documentation.md';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const getConnectionStrength = (from, to) => {
@@ -481,7 +639,11 @@ const SystemArchitectureMap = () => {
     const strength = getConnectionStrength(connection.from, connection.to);
     const isHighlighted = selectedNode && (connection.from === selectedNode || connection.to === selectedNode);
     const isTraced = tracedPath && tracedPath.some(p => p.from === connection.from && p.to === connection.to);
-    const opacity = isTraced ? 1 : (selectedNode && !isHighlighted ? 0.3 : 0.7);
+    
+    // Check if connection should be visible based on focused flow
+    const isInFocusedFlow = !focusedFlow || (isNodeVisible(connection.from) && isNodeVisible(connection.to));
+    
+    const opacity = !isInFocusedFlow ? 0.1 : (isTraced ? 1 : (selectedNode && !isHighlighted ? 0.3 : 0.7));
     const strokeWidth = getStrokeWidth(strength.volume) + (isHighlighted ? 1 : 0);
     
     const connectionId = `${connection.from}-${connection.to}`;
@@ -510,7 +672,7 @@ const SystemArchitectureMap = () => {
         />
         
         {/* Flow indicator line when in flow view */}
-        {flowView && (
+        {flowView && isInFocusedFlow && (
           <line
             x1={`${x1}%`}
             y1={`${y1}%`}
@@ -543,7 +705,7 @@ const SystemArchitectureMap = () => {
         />
         
         {/* Flow direction indicators */}
-        {flowView && !connection.type.includes('trigger') && (
+        {flowView && !connection.type.includes('trigger') && isInFocusedFlow && (
           <circle r="3" fill={connection.color} opacity={0.8}>
             <animateMotion
               dur="2s"
@@ -554,7 +716,7 @@ const SystemArchitectureMap = () => {
         )}
         
         {/* Connection label with background for readability */}
-        {(viewMode === 'overview' || isHighlighted || isHovered || isTraced || flowView) && (
+        {(viewMode === 'overview' || isHighlighted || isHovered || isTraced || (flowView && isInFocusedFlow)) && (
           <g transform={`translate(${midX}%, ${midY}%)`}>
             {/* White background for text */}
             <rect
@@ -611,6 +773,13 @@ const SystemArchitectureMap = () => {
     const isCore = node.id === 'master';
     const isSmall = node.size === 'small';
     const isSearchMatch = searchResults.some(result => result.id === node.id);
+    const isVisible = isNodeVisible(node.id);
+    
+    // Don't render if not visible in focused flow
+    if (!isVisible) return null;
+    
+    // Fade out nodes not in focused flow
+    const opacity = focusedFlow && !isVisible ? 0.2 : 1;
     
     // Even more reduced sizes in flow view
     const width = flowView 
@@ -619,18 +788,6 @@ const SystemArchitectureMap = () => {
     const height = flowView
       ? (isCore ? '70px' : isSmall ? '50px' : '60px')
       : (isCore ? '80px' : isSmall ? '60px' : '70px');
-    
-    // Update breadcrumbs when selecting nodes
-    useEffect(() => {
-      if (selectedNode) {
-        const selected = getNode(selectedNode);
-        if (selected) {
-          setBreadcrumbs([selected]);
-        }
-      } else {
-        setBreadcrumbs([]);
-      }
-    }, [selectedNode]);
     
     return (
       <div
@@ -644,7 +801,8 @@ const SystemArchitectureMap = () => {
           transform: 'translate(-50%, -50%)',
           width: width,
           height: height,
-          position: 'absolute'
+          position: 'absolute',
+          opacity: opacity
         }}
         onMouseEnter={() => setHoveredNode(node.id)}
         onMouseLeave={() => setHoveredNode(null)}
@@ -757,9 +915,58 @@ const SystemArchitectureMap = () => {
                 )}
               </div>
               
+              {/* Focused Flow Selector */}
+              {flowView && (
+                <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setFocusedFlow(null)}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                      focusedFlow === null 
+                        ? 'bg-white text-blue-600 shadow' 
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    All Flows
+                  </button>
+                  <button
+                    onClick={() => setFocusedFlow('production')}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                      focusedFlow === 'production' 
+                        ? 'bg-white text-green-600 shadow' 
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Production
+                  </button>
+                  <button
+                    onClick={() => setFocusedFlow('quality')}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                      focusedFlow === 'quality' 
+                        ? 'bg-white text-orange-600 shadow' 
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Quality
+                  </button>
+                  <button
+                    onClick={() => setFocusedFlow('business')}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                      focusedFlow === 'business' 
+                        ? 'bg-white text-teal-600 shadow' 
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Business
+                  </button>
+                </div>
+              )}
+              
               {/* Flow View Toggle */}
               <button
-                onClick={() => setFlowView(!flowView)}
+                onClick={() => {
+                  setFlowView(!flowView);
+                  if (!flowView) setFocusedFlow(null);
+                }}
                 className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 ${
                   flowView 
                     ? 'bg-blue-100 text-blue-700' 
@@ -866,12 +1073,12 @@ const SystemArchitectureMap = () => {
       <div className="flex-1 relative overflow-hidden">
         {/* Background zones for visual flow understanding */}
         {flowView && (
-          <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 15 }}>
             {/* Flow direction indicators */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+            <svg className="absolute inset-0 w-full h-full">
               <defs>
                 <linearGradient id="flowGradientBg" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#10B981" stopOpacity="0.1" />
+                  <stop offset="0%" stopColor={focusedFlow === 'production' ? '#10B981' : focusedFlow === 'quality' ? '#F59E0B' : focusedFlow === 'business' ? '#00BFA5' : '#10B981'} stopOpacity="0.1" />
                   <stop offset="25%" stopColor="#3B82F6" stopOpacity="0.1" />
                   <stop offset="50%" stopColor="#1E40AF" stopOpacity="0.15" />
                   <stop offset="75%" stopColor="#7C3AED" stopOpacity="0.1" />
@@ -881,8 +1088,8 @@ const SystemArchitectureMap = () => {
               <rect x="0" y="15%" width="100%" height="70%" fill="url(#flowGradientBg)" />
               
               {/* Flow arrows */}
-              <g opacity="0.3">
-                <path d="M 15% 50% L 25% 50%" stroke="#10B981" strokeWidth="2" markerEnd="url(#arrowhead)" />
+              <g opacity={focusedFlow ? "0.5" : "0.3"}>
+                <path d="M 15% 50% L 25% 50%" stroke={focusedFlow === 'production' ? '#10B981' : focusedFlow === 'quality' ? '#F59E0B' : focusedFlow === 'business' ? '#00BFA5' : '#10B981'} strokeWidth="2" markerEnd="url(#arrowhead)" />
                 <path d="M 35% 50% L 45% 50%" stroke="#3B82F6" strokeWidth="2" markerEnd="url(#arrowhead)" />
                 <path d="M 55% 50% L 65% 50%" stroke="#7C3AED" strokeWidth="2" markerEnd="url(#arrowhead)" />
                 <path d="M 75% 50% L 85% 50%" stroke="#DC2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
@@ -890,21 +1097,25 @@ const SystemArchitectureMap = () => {
             </svg>
             
             {/* Zone labels */}
-            <div className="absolute left-[10%] top-[18%] text-xs font-medium text-green-700 opacity-60">
-              INPUT
-            </div>
-            <div className="absolute left-[30%] top-[18%] text-xs font-medium text-blue-700 opacity-60">
-              PROCESS
-            </div>
-            <div className="absolute left-[47%] top-[18%] text-xs font-medium text-blue-900 opacity-70">
-              MASTER
-            </div>
-            <div className="absolute right-[28%] top-[18%] text-xs font-medium text-purple-700 opacity-60">
-              ANALYZE
-            </div>
-            <div className="absolute right-[8%] top-[18%] text-xs font-medium text-red-700 opacity-60">
-              DELIVER
-            </div>
+            {!focusedFlow && (
+              <>
+                <div className="absolute left-[10%] top-[18%] text-xs font-medium text-green-700 opacity-60">
+                  INPUT
+                </div>
+                <div className="absolute left-[30%] top-[18%] text-xs font-medium text-blue-700 opacity-60">
+                  PROCESS
+                </div>
+                <div className="absolute left-[47%] top-[18%] text-xs font-medium text-blue-900 opacity-70">
+                  MASTER
+                </div>
+                <div className="absolute right-[28%] top-[18%] text-xs font-medium text-purple-700 opacity-60">
+                  ANALYZE
+                </div>
+                <div className="absolute right-[8%] top-[18%] text-xs font-medium text-red-700 opacity-60">
+                  DELIVER
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -954,38 +1165,58 @@ const SystemArchitectureMap = () => {
 
         {/* Data Flow Summary - appears in flow view */}
         {flowView && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg border border-gray-200 px-4 py-2 z-40">
-            <div className="flex items-center space-x-3 text-xs">
-              <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <span className="text-gray-600">Input</span>
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg border border-gray-200 px-4 py-2 z-40 flex items-center space-x-2">
+            {focusedFlow ? (
+              <>
+                <div className="text-xs">
+                  <span className="font-semibold capitalize">{focusedFlow} Flow: </span>
+                  <span className="text-gray-600">
+                    {focusedFlow === 'production' && 'Production Team → Master DB → Reports → Dashboard → Daily Meeting'}
+                    {focusedFlow === 'quality' && 'Quality Team → Master DB → Action Report → QA Dashboard → Action Huddle'}
+                    {focusedFlow === 'business' && 'Business Analysts → Master DB → Revenue Report → Business Dashboard → Revenue Review'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setFocusedFlow(null)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  title="Show all flows"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center space-x-3 text-xs">
+                <div className="flex items-center space-x-1">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span className="text-gray-600">Input</span>
+                </div>
+                <ChevronRight className="w-3 h-3 text-gray-400" />
+                <div className="flex items-center space-x-1">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <span className="text-gray-600">Process</span>
+                </div>
+                <ChevronRight className="w-3 h-3 text-gray-400" />
+                <div className="flex items-center space-x-1">
+                  <div className="w-3 h-3 rounded-full bg-blue-700"></div>
+                  <span className="text-gray-600 font-semibold">Master DB</span>
+                </div>
+                <ChevronRight className="w-3 h-3 text-gray-400" />
+                <div className="flex items-center space-x-1">
+                  <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                  <span className="text-gray-600">Reports</span>
+                </div>
+                <ChevronRight className="w-3 h-3 text-gray-400" />
+                <div className="flex items-center space-x-1">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <span className="text-gray-600">Consume</span>
+                </div>
               </div>
-              <ChevronRight className="w-3 h-3 text-gray-400" />
-              <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span className="text-gray-600">Process</span>
-              </div>
-              <ChevronRight className="w-3 h-3 text-gray-400" />
-              <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 rounded-full bg-blue-700"></div>
-                <span className="text-gray-600 font-semibold">Master DB</span>
-              </div>
-              <ChevronRight className="w-3 h-3 text-gray-400" />
-              <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                <span className="text-gray-600">Reports</span>
-              </div>
-              <ChevronRight className="w-3 h-3 text-gray-400" />
-              <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <span className="text-gray-600">Consume</span>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
         {/* Section Labels - smaller and more subtle */}
-        {!flowView && (
+        {(!flowView || (flowView && !focusedFlow)) && (
           <>
             <div className="absolute top-[13%] left-[10%] text-[10px] font-medium text-gray-400 uppercase tracking-wide">
               Data Input
@@ -1106,38 +1337,33 @@ const SystemArchitectureMap = () => {
             <button
               className="w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 flex items-center space-x-2"
               onClick={() => {
-                window.open(contextMenu.node.accessUrl, '_blank');
+                setSelectedNode(contextMenu.node.id);
                 setContextMenu(null);
               }}
             >
               <Eye className="w-3 h-3" />
-              <span>View in Smartsheet</span>
+              <span>View Details</span>
             </button>
             <button
               className="w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 flex items-center space-x-2"
               onClick={() => {
-                console.log('View configuration for:', contextMenu.node.id);
+                setFlowView(true);
+                const nodeType = contextMenu.node.id.includes('production') ? 'production' :
+                               contextMenu.node.id.includes('quality') ? 'quality' :
+                               contextMenu.node.id.includes('bu-') || contextMenu.node.id.includes('client') || contextMenu.node.id.includes('revenue') ? 'business' : null;
+                setFocusedFlow(nodeType);
                 setContextMenu(null);
               }}
             >
-              <Settings className="w-3 h-3" />
-              <span>View Configuration</span>
-            </button>
-            <button
-              className="w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 flex items-center space-x-2"
-              onClick={() => {
-                navigator.clipboard.writeText(contextMenu.node.id);
-                setContextMenu(null);
-              }}
-            >
-              <FileText className="w-3 h-3" />
-              <span>Copy Component ID</span>
+              <Workflow className="w-3 h-3" />
+              <span>Show Related Flow</span>
             </button>
             {contextMenu.node.permissions && (
               <button
                 className="w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 flex items-center space-x-2"
                 onClick={() => {
                   console.log('View permissions for:', contextMenu.node.id);
+                  alert(`Permissions for ${contextMenu.node.name}:\n${contextMenu.node.permissions.join('\n')}`);
                   setContextMenu(null);
                 }}
               >
@@ -1149,12 +1375,20 @@ const SystemArchitectureMap = () => {
             <button
               className="w-full px-3 py-1.5 text-xs text-left hover:bg-gray-100 flex items-center space-x-2"
               onClick={() => {
-                traceDataPath('production-team', 'production-dashboard');
+                // Trace from input to output based on node type
+                const nodeId = contextMenu.node.id;
+                if (nodeId.includes('production')) {
+                  traceDataPath('production-team', 'production-dashboard');
+                } else if (nodeId.includes('quality')) {
+                  traceDataPath('quality-team', 'quality-dashboard');
+                } else if (nodeId.includes('bu-') || nodeId.includes('business')) {
+                  traceDataPath('bu-analysts', 'business-dashboard');
+                }
                 setContextMenu(null);
               }}
             >
               <GitBranch className="w-3 h-3" />
-              <span>Trace Data Path</span>
+              <span>Trace Full Path</span>
             </button>
           </div>
         )}
@@ -1273,11 +1507,11 @@ const SystemArchitectureMap = () => {
             </div>
             <p className="text-xs text-blue-100 leading-relaxed">
               The Master Tracker is the central database connecting all systems. 
-              {flowView ? ' Flow View shows data movement patterns.' : ' Click components to explore data flows.'}
+              {flowView ? (focusedFlow ? ` Showing ${focusedFlow} flow only.` : ' Flow View shows data movement patterns.') : ' Click components to explore data flows.'}
             </p>
             <div className="mt-2 text-[10px] text-blue-200 space-y-0.5">
-              <div>• {flowView ? 'Watch the animated flow indicators' : 'Right-click for quick actions'}</div>
-              <div>• Ctrl+K to search • {flowView ? 'Toggle off for details' : 'Try Flow View for data patterns'}</div>
+              <div>• {flowView ? (focusedFlow ? 'Select "All Flows" to see everything' : 'Choose a specific flow to focus') : 'Right-click for quick actions'}</div>
+              <div>• Ctrl+K to search • {flowView ? 'Toggle off for full details' : 'Try Flow View for data patterns'}</div>
             </div>
           </div>
         )}
