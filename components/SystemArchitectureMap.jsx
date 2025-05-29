@@ -242,6 +242,7 @@ const ConnectionComponent = ({
         y2={`${endPoint.y}%`}
         stroke={color}
         strokeWidth={strokeWidth}
+        strokeOpacity={0.6}
         strokeDasharray={connection.type === 'trigger' ? '6,3' : 'none'}
         markerEnd="url(#arrowhead-sleek)"
         className="transition-all duration-300"
@@ -258,6 +259,7 @@ const SystemArchitectureMap = () => {
   const [flowView, setFlowView] = useState(false);
   const [focusedFlow, setFocusedFlow] = useState(null);
   const [showUI, setShowUI] = useState(true);
+  const [showConnections, setShowConnections] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
 
   // System architecture data
@@ -518,11 +520,13 @@ const SystemArchitectureMap = () => {
         setShowHelp(!showHelp);
       } else if (e.key === 'u') {
         setShowUI(!showUI);
+      } else if (e.key === 'a') {
+        setShowConnections(!showConnections);
       }
     };
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [flowView, showUI]);
+  }, [flowView, showUI, showConnections]);
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 overflow-hidden">
@@ -559,6 +563,13 @@ const SystemArchitectureMap = () => {
               title="Help (H key)"
             >
               <HelpCircle className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setShowConnections(!showConnections)}
+              className="p-2 text-gray-600 hover:text-gray-900 rounded-xl hover:bg-gray-100/80 transition-all"
+              title="Toggle Arrows (A key)"
+            >
+              {showConnections ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
             <button
               onClick={() => setShowUI(!showUI)}
@@ -694,7 +705,7 @@ const SystemArchitectureMap = () => {
                 <polygon points="0 0, 10 3.5, 0 7" />
               </marker>
             </defs>
-            {visibleConnections.map(connection => {
+            {showConnections && visibleConnections.map(connection => {
               const fromNode = getNode(connection.from);
               const toNode = getNode(connection.to);
               if (!fromNode || !toNode) return null;
@@ -784,10 +795,11 @@ const SystemArchitectureMap = () => {
                 <div className="space-y-2 bg-gray-50 rounded-xl p-4">
                   {[
                     { key: 'F', desc: 'Toggle Flow View' },
-                    { key: 'H', desc: 'Toggle Help' },
-                    { key: 'U', desc: 'Toggle UI' },
-                    { key: 'Esc', desc: 'Clear Selection' }
-                  ].map(({ key, desc }) => (
+                  { key: 'H', desc: 'Toggle Help' },
+                  { key: 'U', desc: 'Toggle UI' },
+                  { key: 'A', desc: 'Toggle Arrows' },
+                  { key: 'Esc', desc: 'Clear Selection' }
+                ].map(({ key, desc }) => (
                     <div key={key} className="flex items-center space-x-3">
                       <kbd className="px-2 py-1 bg-white border border-gray-300 rounded-lg text-xs font-mono font-semibold shadow-sm">{key}</kbd>
                       <span className="text-sm">{desc}</span>
