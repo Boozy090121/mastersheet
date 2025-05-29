@@ -44,6 +44,17 @@ const FLOW_TYPES = {
   }
 };
 
+// Add a mapping for connection type colors
+const CONNECTION_TYPE_COLORS = {
+  edit: '#10B981',      // green
+  copy: '#2563EB',      // blue
+  move: '#6B7280',      // gray
+  filter: '#00BFA5',    // teal
+  trigger: '#EF4444',   // red
+  widget: '#F59E0B',    // orange
+  display: '#2563EB',   // blue
+};
+
 // Clean Node Component
 const NodeComponent = ({ 
   node, 
@@ -181,29 +192,25 @@ const ConnectionComponent = ({
            FLOW_TYPES[focusedFlow].nodes.includes(connection.to);
   }, [focusedFlow, flowView, connection]);
   
-  const strokeWidth = strength.volume === 'high' ? 3 : strength.volume === 'medium' ? 2.5 : 2;
-  const opacity = flowView && !isInFlow ? 0.1 : isHighlighted ? 1 : 0.7;
-  
+  const strokeWidth = strength.volume === 'high' ? 4 : strength.volume === 'medium' ? 3 : 2.2;
+  const opacity = flowView && !isInFlow ? 0.13 : isHighlighted ? 1 : 0.8;
+  const color = CONNECTION_TYPE_COLORS[connection.type] || '#888';
+
   // Calculate edge points to prevent overlap with nodes
   const calculateEdgePoint = (from, to, nodeType, isFromNode) => {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    // Normalize direction vector
     const dirX = dx / distance;
     const dirY = dy / distance;
-    
-    // Determine padding based on node type (in percentage units)
     let padding;
     if (nodeType === 'master') {
-      padding = 4.2; // Larger padding for master node
+      padding = 4.2;
     } else if (nodeType === 'small') {
-      padding = 2.8; // Smaller padding for small nodes
+      padding = 2.8;
     } else {
-      padding = 3.5; // Regular padding
+      padding = 3.5;
     }
-    
     if (isFromNode) {
       return {
         x: from.x + dirX * padding,
@@ -216,48 +223,33 @@ const ConnectionComponent = ({
       };
     }
   };
-  
   const fromNodeType = fromNode.id === 'master' ? 'master' : fromNode.size || 'regular';
   const toNodeType = toNode.id === 'master' ? 'master' : toNode.size || 'regular';
-  
   const fromPoint = { x: fromNode.position.x, y: fromNode.position.y };
   const toPoint = { x: toNode.position.x, y: toNode.position.y };
-  
   const startPoint = calculateEdgePoint(fromPoint, toPoint, fromNodeType, true);
   const endPoint = calculateEdgePoint(fromPoint, toPoint, toNodeType, false);
-  
-  // Determine gradient based on connection type
-  const gradientId = `gradient-${connection.type}`;
-  
+
+  // Modern arrowhead
   return (
     <g style={{ opacity }}>
-      {/* Flow highlight effect - only in flow view */}
-      {flowView && isInFlow && focusedFlow && (
-        <line
-          x1={`${startPoint.x}%`}
-          y1={`${startPoint.y}%`}
-          x2={`${endPoint.x}%`}
-          y2={`${endPoint.y}%`}
-          stroke={connection.color}
-          strokeWidth={strokeWidth + 8}
-          opacity={0.1}
-          className="animate-pulse"
-          strokeLinecap="round"
-        />
-      )}
-      
-      {/* Main connection line with gradient */}
+      {/* Main connection line */}
       <line
         x1={`${startPoint.x}%`}
         y1={`${startPoint.y}%`}
         x2={`${endPoint.x}%`}
         y2={`${endPoint.y}%`}
-        stroke={`url(#${gradientId})`}
+        stroke={color}
         strokeWidth={strokeWidth}
         strokeDasharray={connection.type === 'trigger' ? '8,4' : 'none'}
-        markerEnd="url(#arrowhead)"
+        markerEnd="url(#arrowhead-modern)"
         className="transition-all duration-300"
         strokeLinecap="round"
+      />
+      {/* Dot at start for type */}
+      <circle
+        cx={`${startPoint.x}%`} cy={`${startPoint.y}%`} r={strokeWidth + 1.5}
+        fill={color} opacity={0.7}
       />
     </g>
   );
@@ -539,100 +531,115 @@ const SystemArchitectureMap = () => {
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 overflow-hidden">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-sm z-50">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl shadow-lg">
-                <Layers className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900 tracking-tight">PCI Pharma Services</h1>
-                <p className="text-sm text-gray-600 font-medium">Master Execution Tracker Architecture</p>
-              </div>
+      <div className="bg-white/90 backdrop-blur-md border-b border-gray-200/60 shadow z-50">
+        <div className="px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl shadow-lg">
+              <Layers className="w-6 h-6 text-white" />
             </div>
-            
-            <div className="flex items-center space-x-3">
-              {/* Flow View Toggle */}
-              <button
-                onClick={() => {
-                  setFlowView(!flowView);
-                  if (!flowView) setFocusedFlow(null);
-                }}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center space-x-2 ${
-                  flowView 
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl' 
-                    : 'bg-gray-100/80 text-gray-700 hover:bg-gray-200/80'
-                }`}
-              >
-                <Workflow className="w-4 h-4" />
-                <span>Flow View</span>
-              </button>
-              
-              {/* Help Button */}
-              <button
-                onClick={() => setShowHelp(!showHelp)}
-                className="p-2 text-gray-600 hover:text-gray-900 rounded-xl hover:bg-gray-100/80 transition-all"
-                title="Help (H key)"
-              >
-                <HelpCircle className="w-5 h-5" />
-              </button>
-              
-              {/* UI Toggle */}
-              <button
-                onClick={() => setShowUI(!showUI)}
-                className="p-2 text-gray-600 hover:text-gray-900 rounded-xl hover:bg-gray-100/80 transition-all"
-                title="Toggle UI (U key)"
-              >
-                {showUI ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 tracking-tight">PCI Pharma Services</h1>
+              <p className="text-sm text-gray-600 font-medium">Master Execution Tracker Architecture</p>
             </div>
           </div>
-          
-          {/* Flow Selector - Fixed positioning */}
-          {flowView && (
-            <div className="mt-3 flex items-center space-x-3">
-              <span className="text-sm font-semibold text-gray-700">Flow:</span>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setFocusedFlow(null)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    focusedFlow === null 
-                      ? 'bg-gray-800 text-white shadow-md' 
-                      : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm border border-gray-200'
-                  }`}
-                >
-                  All Systems
-                </button>
-                {Object.entries(FLOW_TYPES).map(([key, config]) => {
-                  const Icon = config.icon;
-                  const isActive = focusedFlow === key;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => setFocusedFlow(key)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center space-x-1.5 ${
-                        isActive 
-                          ? 'text-white shadow-md' 
-                          : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm border border-gray-200'
-                      }`}
-                      style={{
-                        backgroundColor: isActive ? config.color : undefined
-                      }}
-                    >
-                      <Icon className="w-3.5 h-3.5" />
-                      <span>{config.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => {
+                setFlowView(!flowView);
+                if (!flowView) setFocusedFlow(null);
+              }}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center space-x-2 ${
+                flowView 
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl' 
+                  : 'bg-gray-100/80 text-gray-700 hover:bg-gray-200/80'
+              }`}
+            >
+              <Workflow className="w-4 h-4" />
+              <span>Flow View</span>
+            </button>
+            <button
+              onClick={() => setShowHelp(!showHelp)}
+              className="p-2 text-gray-600 hover:text-gray-900 rounded-xl hover:bg-gray-100/80 transition-all"
+              title="Help (H key)"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setShowUI(!showUI)}
+              className="p-2 text-gray-600 hover:text-gray-900 rounded-xl hover:bg-gray-100/80 transition-all"
+              title="Toggle UI (U key)"
+            >
+              {showUI ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
+        {flowView && (
+          <div className="px-8 py-2 flex items-center space-x-3 border-t border-gray-100 bg-gradient-to-r from-gray-50/70 to-gray-100/70">
+            <span className="text-sm font-semibold text-gray-700">Flow:</span>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setFocusedFlow(null)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  focusedFlow === null 
+                    ? 'bg-gray-800 text-white shadow-md' 
+                    : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm border border-gray-200'
+                }`}
+              >
+                All Systems
+              </button>
+              {Object.entries(FLOW_TYPES).map(([key, config]) => {
+                const Icon = config.icon;
+                const isActive = focusedFlow === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setFocusedFlow(key)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center space-x-1.5 ${
+                      isActive 
+                        ? 'text-white shadow-md' 
+                        : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm border border-gray-200'
+                    }`}
+                    style={{
+                      backgroundColor: isActive ? config.color : undefined
+                    }}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{config.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
+        {/* Legend - Bottom Left Corner, color-coded */}
+        {showUI && (
+          <div className="absolute bottom-8 left-8 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 p-5 z-30 min-w-[180px]">
+            <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">Connection Types</h4>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-3">
+                <span className="inline-block w-4 h-4 rounded-full" style={{background: CONNECTION_TYPE_COLORS.edit}}></span>
+                <span className="text-xs text-gray-700 font-medium">Direct Edit</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <span className="inline-block w-4 h-4 rounded-full" style={{background: CONNECTION_TYPE_COLORS.copy}}></span>
+                <span className="text-xs text-gray-700 font-medium">Copy/Move</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <span className="inline-block w-4 h-4 rounded-full" style={{background: CONNECTION_TYPE_COLORS.filter}}></span>
+                <span className="text-xs text-gray-700 font-medium">Live Filter</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <span className="inline-block w-4 h-4 rounded-full" style={{background: CONNECTION_TYPE_COLORS.trigger}}></span>
+                <span className="text-xs text-gray-700 font-medium">Trigger</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Left Sidebar - Node Details */}
         {selectedNode && showUI && (
           <div className="w-80 bg-white/95 backdrop-blur-md border-r border-gray-200/50 shadow-lg overflow-y-auto">
@@ -661,11 +668,9 @@ const SystemArchitectureMap = () => {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              
               <p className="text-sm text-gray-600 mb-6 leading-relaxed">
                 {getNode(selectedNode)?.description || 'System component for data processing and workflow management.'}
               </p>
-              
               {(connections.filter(c => c.from === selectedNode).length > 0 || connections.filter(c => c.to === selectedNode).length > 0) && (
                 <div>
                   <h4 className="font-semibold text-gray-700 text-sm uppercase tracking-wider mb-3">Data Flow</h4>
@@ -707,56 +712,23 @@ const SystemArchitectureMap = () => {
           <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 5 }}>
             <defs>
               <marker
-                id="arrowhead"
-                markerWidth="12"
-                markerHeight="10"
-                refX="11"
-                refY="5"
+                id="arrowhead-modern"
+                markerWidth="16"
+                markerHeight="16"
+                refX="13"
+                refY="8"
                 orient="auto"
                 fill="currentColor"
               >
-                <path d="M 0 0 L 12 5 L 0 10 L 3 5 z" opacity="0.8" />
+                <path d="M2,2 L14,8 L2,14 Q4,8 2,2" />
               </marker>
-              
-              {/* Create gradient definitions for each connection type */}
-              <linearGradient id="gradient-edit" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor={COLORS.success} stopOpacity="0.6" />
-                <stop offset="100%" stopColor={COLORS.success} stopOpacity="0.8" />
-              </linearGradient>
-              <linearGradient id="gradient-copy" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor={COLORS.primaryLight} stopOpacity="0.6" />
-                <stop offset="100%" stopColor={COLORS.primaryLight} stopOpacity="0.8" />
-              </linearGradient>
-              <linearGradient id="gradient-filter" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor={COLORS.accent} stopOpacity="0.6" />
-                <stop offset="100%" stopColor={COLORS.accent} stopOpacity="0.8" />
-              </linearGradient>
-              <linearGradient id="gradient-trigger" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor={COLORS.danger} stopOpacity="0.6" />
-                <stop offset="100%" stopColor={COLORS.danger} stopOpacity="0.8" />
-              </linearGradient>
-              <linearGradient id="gradient-move" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor={COLORS.neutral} stopOpacity="0.6" />
-                <stop offset="100%" stopColor={COLORS.neutral} stopOpacity="0.8" />
-              </linearGradient>
-              <linearGradient id="gradient-widget" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor={COLORS.warning} stopOpacity="0.6" />
-                <stop offset="100%" stopColor={COLORS.warning} stopOpacity="0.8" />
-              </linearGradient>
-              <linearGradient id="gradient-display" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor={COLORS.primaryLight} stopOpacity="0.6" />
-                <stop offset="100%" stopColor={COLORS.primaryLight} stopOpacity="0.8" />
-              </linearGradient>
             </defs>
-            
             {visibleConnections.map(connection => {
               const fromNode = getNode(connection.from);
               const toNode = getNode(connection.to);
               if (!fromNode || !toNode) return null;
-              
               const strength = getConnectionStrength(connection.from, connection.to);
               const isHighlighted = selectedNode === connection.from || selectedNode === connection.to;
-              
               return (
                 <ConnectionComponent
                   key={`${connection.from}-${connection.to}`}
@@ -786,31 +758,6 @@ const SystemArchitectureMap = () => {
               onClick={() => setSelectedNode(selectedNode === node.id ? null : node.id)}
             />
           ))}
-
-          {/* Legend - Bottom Right Corner */}
-          {showUI && (
-            <div className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 p-4 z-30">
-              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">Connection Types</h4>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-0.5 bg-gradient-to-r from-green-400 to-green-600 rounded-full"></div>
-                  <span className="text-xs text-gray-600 font-medium">Direct Edit</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full"></div>
-                  <span className="text-xs text-gray-600 font-medium">Copy/Move</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-0.5 bg-gradient-to-r from-teal-400 to-teal-600 rounded-full"></div>
-                  <span className="text-xs text-gray-600 font-medium">Live Filter</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-0.5 border-t-2 border-dashed border-red-500"></div>
-                  <span className="text-xs text-gray-600 font-medium">Trigger</span>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
