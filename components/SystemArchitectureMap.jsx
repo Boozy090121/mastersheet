@@ -192,24 +192,26 @@ const ConnectionComponent = ({
            FLOW_TYPES[focusedFlow].nodes.includes(connection.to);
   }, [focusedFlow, flowView, connection]);
   
-  const strokeWidth = strength.volume === 'high' ? 4 : strength.volume === 'medium' ? 3 : 2.2;
-  const opacity = flowView && !isInFlow ? 0.13 : isHighlighted ? 1 : 0.8;
-  const color = CONNECTION_TYPE_COLORS[connection.type] || '#888';
+  const strokeWidth = strength.volume === 'high' ? 3 : strength.volume === 'medium' ? 2.5 : 2;
+  const opacity = flowView && !isInFlow ? 0.15 : isHighlighted ? 1 : 0.75;
+  const color = CONNECTION_TYPE_COLORS[connection.type] || '#9ca3af'; // Default to a light gray
 
   // Calculate edge points to prevent overlap with nodes
   const calculateEdgePoint = (from, to, nodeType, isFromNode) => {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance === 0) return isFromNode ? from : to; // Avoid division by zero
     const dirX = dx / distance;
     const dirY = dy / distance;
     let padding;
+    // Adjust padding based on node visual size (approximate % widths/heights)
     if (nodeType === 'master') {
-      padding = 4.2;
+      padding = 4.5; // Master node is wider
     } else if (nodeType === 'small') {
-      padding = 2.8;
+      padding = 3;   // Small nodes are more compact
     } else {
-      padding = 3.5;
+      padding = 4;   // Regular nodes
     }
     if (isFromNode) {
       return {
@@ -230,7 +232,6 @@ const ConnectionComponent = ({
   const startPoint = calculateEdgePoint(fromPoint, toPoint, fromNodeType, true);
   const endPoint = calculateEdgePoint(fromPoint, toPoint, toNodeType, false);
 
-  // Modern arrowhead
   return (
     <g style={{ opacity }}>
       {/* Main connection line */}
@@ -241,15 +242,10 @@ const ConnectionComponent = ({
         y2={`${endPoint.y}%`}
         stroke={color}
         strokeWidth={strokeWidth}
-        strokeDasharray={connection.type === 'trigger' ? '8,4' : 'none'}
-        markerEnd="url(#arrowhead-modern)"
+        strokeDasharray={connection.type === 'trigger' ? '6,3' : 'none'}
+        markerEnd="url(#arrowhead-sleek)"
         className="transition-all duration-300"
         strokeLinecap="round"
-      />
-      {/* Dot at start for type */}
-      <circle
-        cx={`${startPoint.x}%`} cy={`${startPoint.y}%`} r={strokeWidth + 1.5}
-        fill={color} opacity={0.7}
       />
     </g>
   );
@@ -615,34 +611,9 @@ const SystemArchitectureMap = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Legend - Bottom Left Corner, color-coded */}
-        {showUI && (
-          <div className="absolute bottom-8 left-8 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 p-5 z-30 min-w-[180px]">
-            <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">Connection Types</h4>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-3">
-                <span className="inline-block w-4 h-4 rounded-full" style={{background: CONNECTION_TYPE_COLORS.edit}}></span>
-                <span className="text-xs text-gray-700 font-medium">Direct Edit</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <span className="inline-block w-4 h-4 rounded-full" style={{background: CONNECTION_TYPE_COLORS.copy}}></span>
-                <span className="text-xs text-gray-700 font-medium">Copy/Move</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <span className="inline-block w-4 h-4 rounded-full" style={{background: CONNECTION_TYPE_COLORS.filter}}></span>
-                <span className="text-xs text-gray-700 font-medium">Live Filter</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <span className="inline-block w-4 h-4 rounded-full" style={{background: CONNECTION_TYPE_COLORS.trigger}}></span>
-                <span className="text-xs text-gray-700 font-medium">Trigger</span>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Left Sidebar - Node Details */}
         {selectedNode && showUI && (
-          <div className="w-80 bg-white/95 backdrop-blur-md border-r border-gray-200/50 shadow-lg overflow-y-auto">
+          <div className="w-80 bg-white/95 backdrop-blur-md border-r border-gray-200/50 shadow-lg overflow-y-auto z-40">
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
@@ -712,15 +683,15 @@ const SystemArchitectureMap = () => {
           <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 5 }}>
             <defs>
               <marker
-                id="arrowhead-modern"
-                markerWidth="16"
-                markerHeight="16"
-                refX="13"
-                refY="8"
+                id="arrowhead-sleek"
+                markerWidth="10"
+                markerHeight="7"
+                refX="8"
+                refY="3.5"
                 orient="auto"
                 fill="currentColor"
               >
-                <path d="M2,2 L14,8 L2,14 Q4,8 2,2" />
+                <polygon points="0 0, 10 3.5, 0 7" />
               </marker>
             </defs>
             {visibleConnections.map(connection => {
@@ -758,6 +729,31 @@ const SystemArchitectureMap = () => {
               onClick={() => setSelectedNode(selectedNode === node.id ? null : node.id)}
             />
           ))}
+          
+          {/* Legend - Bottom Right Corner of Main Diagram Area */}
+          {showUI && (
+            <div className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 p-4 z-30 min-w-[170px]">
+              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2.5">Connection Types</h4>
+              <div className="space-y-1.5">
+                <div className="flex items-center space-x-2.5">
+                  <span className="inline-block w-3 h-3 rounded-sm" style={{backgroundColor: CONNECTION_TYPE_COLORS.edit}}></span>
+                  <span className="text-xs text-gray-600 font-medium">Direct Edit</span>
+                </div>
+                <div className="flex items-center space-x-2.5">
+                  <span className="inline-block w-3 h-3 rounded-sm" style={{backgroundColor: CONNECTION_TYPE_COLORS.copy}}></span>
+                  <span className="text-xs text-gray-600 font-medium">Copy/Move</span>
+                </div>
+                <div className="flex items-center space-x-2.5">
+                  <span className="inline-block w-3 h-3 rounded-sm" style={{backgroundColor: CONNECTION_TYPE_COLORS.filter}}></span>
+                  <span className="text-xs text-gray-600 font-medium">Live Filter</span>
+                </div>
+                <div className="flex items-center space-x-2.5">
+                  <span className="inline-block w-3 h-3 rounded-sm" style={{backgroundColor: CONNECTION_TYPE_COLORS.trigger}}></span>
+                  <span className="text-xs text-gray-600 font-medium">Trigger</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
