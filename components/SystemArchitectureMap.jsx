@@ -25,21 +25,21 @@ const FLOW_TYPES = {
     color: COLORS.production,
     label: 'Production',
     description: 'Real-time production tracking and safety monitoring',
-    icon: <Activity className="w-4 h-4" />,
+    icon: <Activity />,
     nodes: ['production-team', 'master', 'production-child', 'dds-report', 'production-dashboard', 'dds-meeting', 'daily-reminders', 'red-alerts']
   },
   quality: {
     color: COLORS.quality,
     label: 'Quality',
     description: 'Quality assurance and deviation management',
-    icon: <Shield className="w-4 h-4" />,
+    icon: <Shield />,
     nodes: ['quality-team', 'master', 'quality-child', 'action-report', 'quality-dashboard', 'action-huddle', 'overdue-alerts']
   },
   business: {
     color: COLORS.business,
     label: 'Business',
     description: 'Revenue tracking and client relationship management',
-    icon: <TrendingUp className="w-4 h-4" />,
+    icon: <TrendingUp />,
     nodes: ['bu-analysts', 'master', 'client-sheets', 'revenue-report', 'business-dashboard', 'revenue-review', 'exec-report', 'archive-sheet']
   }
 };
@@ -73,7 +73,7 @@ const NodeComponent = ({
   return (
     <div
       className={`absolute cursor-pointer transition-all duration-300 ${
-        isSelected ? 'z-50' : isHovered ? 'z-40' : 'z-30'
+        isSelected ? 'z-50' : isHovered ? 'z-40' : 'z-20'
       }`}
       style={{ 
         left: `${node.position.x}%`,
@@ -181,47 +181,80 @@ const ConnectionComponent = ({
            FLOW_TYPES[focusedFlow].nodes.includes(connection.to);
   }, [focusedFlow, flowView, connection]);
   
-  const strokeWidth = strength.volume === 'high' ? 3.5 : strength.volume === 'medium' ? 2.5 : 2;
-  const opacity = flowView && !isInFlow ? 0.1 : isHighlighted ? 0.9 : 0.6;
+  const strokeWidth = strength.volume === 'high' ? 3 : strength.volume === 'medium' ? 2.5 : 2;
+  const opacity = flowView && !isInFlow ? 0.1 : isHighlighted ? 1 : 0.7;
+  
+  // Calculate edge points to prevent overlap with nodes
+  const calculateEdgePoint = (from, to, nodeType, isFromNode) => {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Normalize direction vector
+    const dirX = dx / distance;
+    const dirY = dy / distance;
+    
+    // Determine padding based on node type (in percentage units)
+    let padding;
+    if (nodeType === 'master') {
+      padding = 4.2; // Larger padding for master node
+    } else if (nodeType === 'small') {
+      padding = 2.8; // Smaller padding for small nodes
+    } else {
+      padding = 3.5; // Regular padding
+    }
+    
+    if (isFromNode) {
+      return {
+        x: from.x + dirX * padding,
+        y: from.y + dirY * padding
+      };
+    } else {
+      return {
+        x: to.x - dirX * padding,
+        y: to.y - dirY * padding
+      };
+    }
+  };
+  
+  const fromNodeType = fromNode.id === 'master' ? 'master' : fromNode.size || 'regular';
+  const toNodeType = toNode.id === 'master' ? 'master' : toNode.size || 'regular';
+  
+  const fromPoint = { x: fromNode.position.x, y: fromNode.position.y };
+  const toPoint = { x: toNode.position.x, y: toNode.position.y };
+  
+  const startPoint = calculateEdgePoint(fromPoint, toPoint, fromNodeType, true);
+  const endPoint = calculateEdgePoint(fromPoint, toPoint, toNodeType, false);
+  
+  // Determine gradient based on connection type
+  const gradientId = `gradient-${connection.type}`;
   
   return (
     <g style={{ opacity }}>
-      {/* Shadow for depth */}
-      <line
-        x1={`${fromNode.position.x}%`}
-        y1={`${fromNode.position.y}%`}
-        x2={`${toNode.position.x}%`}
-        y2={`${toNode.position.y}%`}
-        stroke="black"
-        strokeWidth={strokeWidth}
-        opacity={0.1}
-        filter="blur(1px)"
-        transform="translate(0, 1)"
-      />
-      
-      {/* Flow highlight effect */}
+      {/* Flow highlight effect - only in flow view */}
       {flowView && isInFlow && focusedFlow && (
         <line
-          x1={`${fromNode.position.x}%`}
-          y1={`${fromNode.position.y}%`}
-          x2={`${toNode.position.x}%`}
-          y2={`${toNode.position.y}%`}
+          x1={`${startPoint.x}%`}
+          y1={`${startPoint.y}%`}
+          x2={`${endPoint.x}%`}
+          y2={`${endPoint.y}%`}
           stroke={connection.color}
-          strokeWidth={strokeWidth + 4}
-          opacity={0.2}
+          strokeWidth={strokeWidth + 8}
+          opacity={0.1}
           className="animate-pulse"
+          strokeLinecap="round"
         />
       )}
       
-      {/* Main connection line */}
+      {/* Main connection line with gradient */}
       <line
-        x1={`${fromNode.position.x}%`}
-        y1={`${fromNode.position.y}%`}
-        x2={`${toNode.position.x}%`}
-        y2={`${toNode.position.y}%`}
-        stroke={connection.color}
+        x1={`${startPoint.x}%`}
+        y1={`${startPoint.y}%`}
+        x2={`${endPoint.x}%`}
+        y2={`${endPoint.y}%`}
+        stroke={`url(#${gradientId})`}
         strokeWidth={strokeWidth}
-        strokeDasharray={connection.type === 'trigger' ? '6,3' : 'none'}
+        strokeDasharray={connection.type === 'trigger' ? '8,4' : 'none'}
         markerEnd="url(#arrowhead)"
         className="transition-all duration-300"
         strokeLinecap="round"
@@ -581,23 +614,26 @@ const SystemArchitectureMap = () => {
                 >
                   All Systems
                 </button>
-                {Object.entries(FLOW_TYPES).map(([key, config]) => (
-                  <button
-                    key={key}
-                    onClick={() => setFocusedFlow(key)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center space-x-1.5 ${
-                      focusedFlow === key 
-                        ? 'text-white shadow-md' 
-                        : 'bg-white/80 text-gray-700 hover:bg-gray-100/80 shadow-sm'
-                    }`}
-                    style={{
-                      backgroundColor: focusedFlow === key ? config.color : undefined
-                    }}
-                  >
-                    {config.icon}
-                    <span>{config.label}</span>
-                  </button>
-                ))}
+                {Object.entries(FLOW_TYPES).map(([key, config]) => {
+                  const isActive = focusedFlow === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setFocusedFlow(key)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center space-x-1.5 ${
+                        isActive 
+                          ? 'text-white shadow-md' 
+                          : 'bg-white/80 text-gray-700 hover:bg-gray-100/80 shadow-sm'
+                      }`}
+                      style={{
+                        backgroundColor: isActive ? config.color : undefined
+                      }}
+                    >
+                      {React.cloneElement(config.icon, { className: 'w-3.5 h-3.5' })}
+                      <span>{config.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -619,22 +655,49 @@ const SystemArchitectureMap = () => {
         )}
 
         {/* SVG Connections */}
-        <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
+        <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 5 }}>
           <defs>
             <marker
               id="arrowhead"
-              markerWidth="10"
-              markerHeight="8"
-              refX="9"
-              refY="4"
+              markerWidth="12"
+              markerHeight="10"
+              refX="11"
+              refY="5"
               orient="auto"
               fill="currentColor"
             >
-              <polygon points="0 0, 10 4, 0 8" opacity="0.7" />
+              <path d="M 0 0 L 12 5 L 0 10 L 3 5 z" opacity="0.8" />
             </marker>
-            <filter id="blur">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
-            </filter>
+            
+            {/* Create gradient definitions for each connection type */}
+            <linearGradient id="gradient-edit" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={COLORS.success} stopOpacity="0.6" />
+              <stop offset="100%" stopColor={COLORS.success} stopOpacity="0.8" />
+            </linearGradient>
+            <linearGradient id="gradient-copy" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={COLORS.primaryLight} stopOpacity="0.6" />
+              <stop offset="100%" stopColor={COLORS.primaryLight} stopOpacity="0.8" />
+            </linearGradient>
+            <linearGradient id="gradient-filter" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={COLORS.accent} stopOpacity="0.6" />
+              <stop offset="100%" stopColor={COLORS.accent} stopOpacity="0.8" />
+            </linearGradient>
+            <linearGradient id="gradient-trigger" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={COLORS.danger} stopOpacity="0.6" />
+              <stop offset="100%" stopColor={COLORS.danger} stopOpacity="0.8" />
+            </linearGradient>
+            <linearGradient id="gradient-move" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={COLORS.neutral} stopOpacity="0.6" />
+              <stop offset="100%" stopColor={COLORS.neutral} stopOpacity="0.8" />
+            </linearGradient>
+            <linearGradient id="gradient-widget" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={COLORS.warning} stopOpacity="0.6" />
+              <stop offset="100%" stopColor={COLORS.warning} stopOpacity="0.8" />
+            </linearGradient>
+            <linearGradient id="gradient-display" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={COLORS.primaryLight} stopOpacity="0.6" />
+              <stop offset="100%" stopColor={COLORS.primaryLight} stopOpacity="0.8" />
+            </linearGradient>
           </defs>
           
           {visibleConnections.map(connection => {
@@ -677,52 +740,59 @@ const SystemArchitectureMap = () => {
 
         {/* Enhanced Selected Node Details */}
         {selectedNode && showUI && (
-          <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200/50 p-5 max-w-sm z-40 animate-slide-up">
+          <div className="fixed bottom-6 left-6 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200/50 p-5 max-w-sm z-50 animate-slide-up">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center space-x-3">
                 <div 
-                  className="p-2 rounded-xl"
+                  className="p-2 rounded-xl flex-shrink-0"
                   style={{ backgroundColor: `${getNode(selectedNode)?.color}15` }}
                 >
                   <div style={{ color: getNode(selectedNode)?.color }}>
-                    {React.cloneElement(getNode(selectedNode)?.icon || <Info />, { className: 'w-5 h-5' })}
+                    {getNode(selectedNode)?.icon ? React.cloneElement(getNode(selectedNode).icon, { className: 'w-5 h-5' }) : <Info className="w-5 h-5" />}
                   </div>
                 </div>
-                <h3 className="font-bold text-gray-900 text-lg">{getNode(selectedNode)?.name}</h3>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-gray-900 text-lg truncate">{getNode(selectedNode)?.name}</h3>
+                  {getNode(selectedNode)?.subtitle && (
+                    <p className="text-xs text-gray-500 font-medium">{getNode(selectedNode).subtitle}</p>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => setSelectedNode(null)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-lg"
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-lg flex-shrink-0 ml-2"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-sm text-gray-600 mb-4 leading-relaxed">{getNode(selectedNode)?.description || 'System component'}</p>
+            <p className="text-sm text-gray-600 mb-4 leading-relaxed">{getNode(selectedNode)?.description || 'System component for data processing and workflow management.'}</p>
             <div className="space-y-3">
-              <div>
-                <div className="font-semibold text-gray-700 text-xs uppercase tracking-wider mb-2">Data Flow</div>
-                <div className="space-y-1.5">
-                  {connections.filter(c => c.from === selectedNode).map((c, i) => (
-                    <div key={i} className="text-sm text-gray-600 pl-3 flex items-center space-x-2">
-                      <div className="w-1 h-1 bg-blue-500 rounded-full" />
-                      <span>→ {getNode(c.to)?.name}</span>
-                    </div>
-                  ))}
-                  {connections.filter(c => c.to === selectedNode).map((c, i) => (
-                    <div key={i} className="text-sm text-gray-600 pl-3 flex items-center space-x-2">
-                      <div className="w-1 h-1 bg-green-500 rounded-full" />
-                      <span>← {getNode(c.from)?.name}</span>
-                    </div>
-                  ))}
+              {(connections.filter(c => c.from === selectedNode).length > 0 || connections.filter(c => c.to === selectedNode).length > 0) && (
+                <div>
+                  <div className="font-semibold text-gray-700 text-xs uppercase tracking-wider mb-2">Data Flow</div>
+                  <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                    {connections.filter(c => c.from === selectedNode).map((c, i) => (
+                      <div key={`from-${i}`} className="text-sm text-gray-600 pl-3 flex items-center space-x-2">
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />
+                        <span className="truncate">→ {getNode(c.to)?.name}</span>
+                      </div>
+                    ))}
+                    {connections.filter(c => c.to === selectedNode).map((c, i) => (
+                      <div key={`to-${i}`} className="text-sm text-gray-600 pl-3 flex items-center space-x-2">
+                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0" />
+                        <span className="truncate">← {getNode(c.from)?.name}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}
 
         {/* Enhanced Legend */}
         {showUI && (
-          <div className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200/50 p-4 z-40">
+          <div className="fixed bottom-6 right-6 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200/50 p-4 z-50">
             <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">Connection Types</h4>
             <div className="space-y-2">
               <div className="flex items-center space-x-3">
@@ -841,3 +911,4 @@ const SystemArchitectureMap = () => {
 };
 
 export default SystemArchitectureMap; 
+
