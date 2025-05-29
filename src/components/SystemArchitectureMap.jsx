@@ -6,6 +6,7 @@ const SystemArchitectureMap = () => {
   const [hoveredNode, setHoveredNode] = useState(null);
   const [hoveredConnection, setHoveredConnection] = useState(null);
   const [viewMode, setViewMode] = useState('overview');
+  const [flowView, setFlowView] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showStats, setShowStats] = useState(true);
@@ -508,6 +509,22 @@ const SystemArchitectureMap = () => {
           onMouseLeave={() => setHoveredConnection(null)}
         />
         
+        {/* Flow indicator line when in flow view */}
+        {flowView && (
+          <line
+            x1={`${x1}%`}
+            y1={`${y1}%`}
+            x2={`${x2}%`}
+            y2={`${y2}%`}
+            stroke="url(#flowGradient)"
+            strokeWidth={strokeWidth + 2}
+            opacity={0.3}
+            style={{
+              pointerEvents: 'none'
+            }}
+          />
+        )}
+        
         {/* Visible connection line */}
         <line
           x1={`${x1}%`}
@@ -525,8 +542,19 @@ const SystemArchitectureMap = () => {
           }}
         />
         
+        {/* Flow direction indicators */}
+        {flowView && !connection.type.includes('trigger') && (
+          <circle r="3" fill={connection.color} opacity={0.8}>
+            <animateMotion
+              dur="2s"
+              repeatCount="indefinite"
+              path={`M ${x1},${y1} L ${x2},${y2}`}
+            />
+          </circle>
+        )}
+        
         {/* Connection label with background for readability */}
-        {(viewMode === 'overview' || isHighlighted || isHovered || isTraced) && (
+        {(viewMode === 'overview' || isHighlighted || isHovered || isTraced || flowView) && (
           <g transform={`translate(${midX}%, ${midY}%)`}>
             {/* White background for text */}
             <rect
@@ -554,7 +582,7 @@ const SystemArchitectureMap = () => {
         )}
         
         {/* Connection details tooltip */}
-        {isHovered && viewMode === 'detailed' && (
+        {isHovered && viewMode === 'detailed' && !flowView && (
           <foreignObject
             x={`${midX}%`}
             y={`${midY}%`}
@@ -584,9 +612,13 @@ const SystemArchitectureMap = () => {
     const isSmall = node.size === 'small';
     const isSearchMatch = searchResults.some(result => result.id === node.id);
     
-    // Significantly reduced sizes
-    const width = isCore ? '140px' : isSmall ? '100px' : '120px';
-    const height = isCore ? '80px' : isSmall ? '60px' : '70px';
+    // Even more reduced sizes in flow view
+    const width = flowView 
+      ? (isCore ? '120px' : isSmall ? '80px' : '100px')
+      : (isCore ? '140px' : isSmall ? '100px' : '120px');
+    const height = flowView
+      ? (isCore ? '70px' : isSmall ? '50px' : '60px')
+      : (isCore ? '80px' : isSmall ? '60px' : '70px');
     
     // Update breadcrumbs when selecting nodes
     useEffect(() => {
@@ -627,11 +659,11 @@ const SystemArchitectureMap = () => {
           } ${isCore ? 'bg-gradient-to-br from-blue-50 to-white' : 'bg-white'} p-2 flex flex-col items-center justify-center relative`}
         >
           <div 
-            className={`${isSmall ? 'p-1' : 'p-1.5'} rounded-md mb-1`}
+            className={`${isSmall || flowView ? 'p-1' : 'p-1.5'} rounded-md mb-1`}
             style={{ backgroundColor: `${node.color}15` }}
           >
             <div style={{ color: node.color }}>
-              {isSmall ? 
+              {flowView || isSmall ? 
                 React.cloneElement(node.icon, { className: 'w-4 h-4' }) : 
                 isCore ?
                 React.cloneElement(node.icon, { className: 'w-8 h-8' }) :
@@ -641,13 +673,13 @@ const SystemArchitectureMap = () => {
           </div>
           
           <h3 className={`font-semibold text-gray-900 text-center leading-tight ${
-            isSmall ? 'text-[10px]' : isCore ? 'text-xs' : 'text-[11px]'
+            flowView ? 'text-[10px]' : (isSmall ? 'text-[10px]' : isCore ? 'text-xs' : 'text-[11px]')
           }`}>
             {node.name}
           </h3>
           
-          {/* Only show subtitle in detailed view or for core node */}
-          {(viewMode === 'detailed' || isCore) && !isSmall && (
+          {/* Only show subtitle in detailed view and not in flow view */}
+          {(viewMode === 'detailed' && !flowView || isCore && !flowView) && !isSmall && (
             <p className="text-[10px] text-gray-500 text-center leading-tight mt-0.5">
               {node.subtitle}
             </p>
@@ -656,7 +688,7 @@ const SystemArchitectureMap = () => {
           {/* Central Hub label for Master Tracker */}
           {isCore && (
             <div className="absolute -bottom-1.5 left-1/2 transform -translate-x-1/2">
-              <div className="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm whitespace-nowrap">
+              <div className={`bg-blue-600 text-white ${flowView ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5'} rounded-full font-medium shadow-sm whitespace-nowrap`}>
                 Central Hub
               </div>
             </div>
@@ -724,6 +756,19 @@ const SystemArchitectureMap = () => {
                   </button>
                 )}
               </div>
+              
+              {/* Flow View Toggle */}
+              <button
+                onClick={() => setFlowView(!flowView)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center space-x-1.5 ${
+                  flowView 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'bg-gray-100 text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Workflow className="w-3.5 h-3.5" />
+                <span>Flow View</span>
+              </button>
               
               {/* Time view toggle */}
               <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
@@ -819,8 +864,55 @@ const SystemArchitectureMap = () => {
 
       {/* Main Visualization Area */}
       <div className="flex-1 relative overflow-hidden">
+        {/* Background zones for visual flow understanding */}
+        {flowView && (
+          <div className="absolute inset-0 pointer-events-none">
+            {/* Flow direction indicators */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+              <defs>
+                <linearGradient id="flowGradientBg" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#10B981" stopOpacity="0.1" />
+                  <stop offset="25%" stopColor="#3B82F6" stopOpacity="0.1" />
+                  <stop offset="50%" stopColor="#1E40AF" stopOpacity="0.15" />
+                  <stop offset="75%" stopColor="#7C3AED" stopOpacity="0.1" />
+                  <stop offset="100%" stopColor="#DC2626" stopOpacity="0.1" />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="15%" width="100%" height="70%" fill="url(#flowGradientBg)" />
+              
+              {/* Flow arrows */}
+              <g opacity="0.3">
+                <path d="M 15% 50% L 25% 50%" stroke="#10B981" strokeWidth="2" markerEnd="url(#arrowhead)" />
+                <path d="M 35% 50% L 45% 50%" stroke="#3B82F6" strokeWidth="2" markerEnd="url(#arrowhead)" />
+                <path d="M 55% 50% L 65% 50%" stroke="#7C3AED" strokeWidth="2" markerEnd="url(#arrowhead)" />
+                <path d="M 75% 50% L 85% 50%" stroke="#DC2626" strokeWidth="2" markerEnd="url(#arrowhead)" />
+              </g>
+            </svg>
+            
+            {/* Zone labels */}
+            <div className="absolute left-[10%] top-[18%] text-xs font-medium text-green-700 opacity-60">
+              INPUT
+            </div>
+            <div className="absolute left-[30%] top-[18%] text-xs font-medium text-blue-700 opacity-60">
+              PROCESS
+            </div>
+            <div className="absolute left-[47%] top-[18%] text-xs font-medium text-blue-900 opacity-70">
+              MASTER
+            </div>
+            <div className="absolute right-[28%] top-[18%] text-xs font-medium text-purple-700 opacity-60">
+              ANALYZE
+            </div>
+            <div className="absolute right-[8%] top-[18%] text-xs font-medium text-red-700 opacity-60">
+              DELIVER
+            </div>
+          </div>
+        )}
+
         {/* SVG for connections - Fixed layering and visibility */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+        <svg
+          className="absolute inset-0 w-full h-full"
+          style={{ zIndex: 20 }}
+        >
           <defs>
             <marker
               id="arrowhead"
@@ -839,6 +931,18 @@ const SystemArchitectureMap = () => {
             <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
               <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodOpacity="0.15"/>
             </filter>
+            {/* Gradient for flow direction */}
+            <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="currentColor" stopOpacity="0.3">
+                <animate attributeName="offset" values="0;1;0" dur="3s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="50%" stopColor="currentColor" stopOpacity="0.8">
+                <animate attributeName="offset" values="0;1;0" dur="3s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="100%" stopColor="currentColor" stopOpacity="0.3">
+                <animate attributeName="offset" values="0;1;0" dur="3s" repeatCount="indefinite" />
+              </stop>
+            </linearGradient>
           </defs>
           <g className="connections-layer">
             {getVisibleConnections().map(renderConnection)}
@@ -848,25 +952,61 @@ const SystemArchitectureMap = () => {
         {/* Render all nodes */}
         {allNodes.map(renderNode)}
 
+        {/* Data Flow Summary - appears in flow view */}
+        {flowView && (
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg border border-gray-200 px-4 py-2 z-40">
+            <div className="flex items-center space-x-3 text-xs">
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span className="text-gray-600">Input</span>
+              </div>
+              <ChevronRight className="w-3 h-3 text-gray-400" />
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span className="text-gray-600">Process</span>
+              </div>
+              <ChevronRight className="w-3 h-3 text-gray-400" />
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 rounded-full bg-blue-700"></div>
+                <span className="text-gray-600 font-semibold">Master DB</span>
+              </div>
+              <ChevronRight className="w-3 h-3 text-gray-400" />
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                <span className="text-gray-600">Reports</span>
+              </div>
+              <ChevronRight className="w-3 h-3 text-gray-400" />
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <span className="text-gray-600">Consume</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Section Labels - smaller and more subtle */}
-        <div className="absolute top-[13%] left-[10%] text-[10px] font-medium text-gray-400 uppercase tracking-wide">
-          Data Input
-        </div>
-        <div className="absolute top-[13%] left-[30%] text-[10px] font-medium text-gray-400 uppercase tracking-wide">
-          Data Views
-        </div>
-        <div className="absolute top-[13%] right-[28%] text-[10px] font-medium text-gray-400 uppercase tracking-wide">
-          Reports
-        </div>
-        <div className="absolute top-[13%] right-[8%] text-[10px] font-medium text-gray-400 uppercase tracking-wide">
-          Dashboards
-        </div>
-        <div className="absolute bottom-[12%] left-[50%] transform -translate-x-1/2 text-[10px] font-medium text-gray-400 uppercase tracking-wide">
-          Automations
-        </div>
-        <div className="absolute top-[5%] left-[50%] transform -translate-x-1/2 text-[10px] font-medium text-gray-400 uppercase tracking-wide">
-          Meeting Cadence
-        </div>
+        {!flowView && (
+          <>
+            <div className="absolute top-[13%] left-[10%] text-[10px] font-medium text-gray-400 uppercase tracking-wide">
+              Data Input
+            </div>
+            <div className="absolute top-[13%] left-[30%] text-[10px] font-medium text-gray-400 uppercase tracking-wide">
+              Data Views
+            </div>
+            <div className="absolute top-[13%] right-[28%] text-[10px] font-medium text-gray-400 uppercase tracking-wide">
+              Reports
+            </div>
+            <div className="absolute top-[13%] right-[8%] text-[10px] font-medium text-gray-400 uppercase tracking-wide">
+              Dashboards
+            </div>
+            <div className="absolute bottom-[12%] left-[50%] transform -translate-x-1/2 text-[10px] font-medium text-gray-400 uppercase tracking-wide">
+              Automations
+            </div>
+            <div className="absolute top-[5%] left-[50%] transform -translate-x-1/2 text-[10px] font-medium text-gray-400 uppercase tracking-wide">
+              Meeting Cadence
+            </div>
+          </>
+        )}
 
         {/* System Architecture Info Panel - more compact */}
         {showStats && (
@@ -1132,11 +1272,12 @@ const SystemArchitectureMap = () => {
               <span className="font-semibold text-sm">Interactive System Map</span>
             </div>
             <p className="text-xs text-blue-100 leading-relaxed">
-              The Master Tracker is the central database connecting all systems. Click components to explore data flows.
+              The Master Tracker is the central database connecting all systems. 
+              {flowView ? ' Flow View shows data movement patterns.' : ' Click components to explore data flows.'}
             </p>
             <div className="mt-2 text-[10px] text-blue-200 space-y-0.5">
-              <div>• Right-click for quick actions</div>
-              <div>• Ctrl+K to search • Hover lines for details</div>
+              <div>• {flowView ? 'Watch the animated flow indicators' : 'Right-click for quick actions'}</div>
+              <div>• Ctrl+K to search • {flowView ? 'Toggle off for details' : 'Try Flow View for data patterns'}</div>
             </div>
           </div>
         )}
