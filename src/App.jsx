@@ -1,6 +1,6 @@
 import React from 'react';
-import Layout from './components/Layout';
+import SystemArchitectureMap from '../components/SystemArchitectureMap';
 
 export default function App() {
-  return <Layout />;
+  return <SystemArchitectureMap />;
 }
