@@ -78,7 +78,7 @@ const NodeComponent = ({
       style={{ 
         left: `${node.position.x}%`,
         top: `${node.position.y}%`,
-        transform: 'translate(-50%, -50%)',
+        transform: `translate(-50%, -50%) ${isHovered ? 'scale(1.02)' : ''} ${isSelected ? 'scale(1.05)' : ''}`,
         opacity: flowView && !isInFocusedFlow ? 0.2 : 1
       }}
       onMouseEnter={onMouseEnter}
@@ -87,21 +87,32 @@ const NodeComponent = ({
     >
       <div 
         className={`
-          relative rounded-lg shadow-md border transition-all duration-300
-          ${isSelected ? 'shadow-xl scale-105 ring-2 ring-blue-400' : ''}
-          ${isHovered ? 'shadow-lg scale-102' : ''}
-          ${isCore ? 'bg-gradient-to-br from-blue-50 to-white border-blue-200' : 'bg-white border-gray-200'}
-          ${isSmall ? 'p-2' : 'p-3'}
+          relative rounded-xl backdrop-blur-sm border transition-all duration-300
+          ${isCore ? 'bg-gradient-to-br from-white/95 to-blue-50/95 border-blue-200/50' : 'bg-white/90 border-gray-200/50'}
+          ${isSmall ? 'p-2.5' : 'p-4'}
+          ${isSelected ? 'shadow-2xl ring-2 ring-blue-400 ring-offset-2' : ''}
+          ${isHovered && !isSelected ? 'shadow-xl' : 'shadow-lg'}
         `}
         style={{
-          minWidth: isCore ? '130px' : isSmall ? '80px' : '100px',
-          borderColor: isSelected ? COLORS.primaryLight : isHovered ? node.color : undefined
+          minWidth: isCore ? '140px' : isSmall ? '90px' : '110px',
+          borderColor: isSelected ? COLORS.primaryLight : isHovered ? node.color : undefined,
+          boxShadow: isHovered && !isSelected ? `0 10px 30px -10px ${node.color}40` : undefined
         }}
       >
+        {/* Animated gradient background for hover */}
+        {isHovered && !isSelected && (
+          <div 
+            className="absolute inset-0 rounded-xl opacity-10"
+            style={{
+              background: `radial-gradient(circle at 50% 50%, ${node.color}20 0%, transparent 70%)`
+            }}
+          />
+        )}
+        
         {/* Flow indicator - pulse animation */}
         {flowView && nodeFlow && isInFocusedFlow && focusedFlow && (
           <div 
-            className="absolute -top-1 -right-1 w-3 h-3 rounded-full"
+            className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full shadow-lg"
             style={{ backgroundColor: FLOW_TYPES[nodeFlow].color }}
           >
             <div 
@@ -111,35 +122,41 @@ const NodeComponent = ({
           </div>
         )}
         
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center relative">
           <div 
-            className={`${isSmall ? 'p-1.5' : 'p-2'} rounded-lg mb-1.5`}
-            style={{ backgroundColor: `${node.color}15` }}
+            className={`${isSmall ? 'p-2' : 'p-2.5'} rounded-xl mb-2 backdrop-blur-sm transition-all duration-300 ${
+              isHovered ? 'scale-110' : ''
+            }`}
+            style={{ 
+              backgroundColor: `${node.color}15`,
+              boxShadow: isHovered ? `0 4px 12px -2px ${node.color}30` : 'none'
+            }}
           >
             <div style={{ color: node.color }}>
               {React.cloneElement(node.icon, { 
-                className: isSmall ? 'w-4 h-4' : isCore ? 'w-7 h-7' : 'w-5 h-5' 
+                className: isSmall ? 'w-4 h-4' : isCore ? 'w-8 h-8' : 'w-5 h-5' 
               })}
             </div>
           </div>
           
-          <h3 className={`font-semibold text-gray-900 text-center ${
-            isSmall ? 'text-[11px]' : isCore ? 'text-sm' : 'text-xs'
+          <h3 className={`font-semibold text-gray-900 text-center leading-tight ${
+            isSmall ? 'text-xs' : isCore ? 'text-sm' : 'text-xs'
           }`}>
             {node.name}
           </h3>
           
           {node.subtitle && !isSmall && (
-            <p className="text-[10px] text-gray-500 text-center mt-0.5">
+            <p className="text-[10px] text-gray-500 text-center mt-1 font-medium">
               {node.subtitle}
             </p>
           )}
         </div>
         
         {isCore && (
-          <div className="absolute -bottom-2.5 left-1/2 transform -translate-x-1/2">
-            <div className="bg-blue-600 text-white text-[10px] px-2.5 py-0.5 rounded-full font-medium shadow whitespace-nowrap">
-              Central Hub
+          <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white text-[10px] px-3 py-1 rounded-full font-semibold shadow-lg whitespace-nowrap flex items-center space-x-1">
+              <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+              <span>Central Hub</span>
             </div>
           </div>
         )}
@@ -148,7 +165,7 @@ const NodeComponent = ({
   );
 };
 
-// Clean Connection Component
+// Enhanced Connection Component
 const ConnectionComponent = ({ 
   connection, 
   fromNode, 
@@ -164,11 +181,24 @@ const ConnectionComponent = ({
            FLOW_TYPES[focusedFlow].nodes.includes(connection.to);
   }, [focusedFlow, flowView, connection]);
   
-  const strokeWidth = strength.volume === 'high' ? 3 : strength.volume === 'medium' ? 2 : 1.5;
-  const opacity = flowView && !isInFlow ? 0.1 : isHighlighted ? 0.8 : 0.5;
+  const strokeWidth = strength.volume === 'high' ? 3.5 : strength.volume === 'medium' ? 2.5 : 2;
+  const opacity = flowView && !isInFlow ? 0.1 : isHighlighted ? 0.9 : 0.6;
   
   return (
     <g style={{ opacity }}>
+      {/* Shadow for depth */}
+      <line
+        x1={`${fromNode.position.x}%`}
+        y1={`${fromNode.position.y}%`}
+        x2={`${toNode.position.x}%`}
+        y2={`${toNode.position.y}%`}
+        stroke="black"
+        strokeWidth={strokeWidth}
+        opacity={0.1}
+        filter="blur(1px)"
+        transform="translate(0, 1)"
+      />
+      
       {/* Flow highlight effect */}
       {flowView && isInFlow && focusedFlow && (
         <line
@@ -177,7 +207,7 @@ const ConnectionComponent = ({
           x2={`${toNode.position.x}%`}
           y2={`${toNode.position.y}%`}
           stroke={connection.color}
-          strokeWidth={strokeWidth + 3}
+          strokeWidth={strokeWidth + 4}
           opacity={0.2}
           className="animate-pulse"
         />
@@ -191,9 +221,10 @@ const ConnectionComponent = ({
         y2={`${toNode.position.y}%`}
         stroke={connection.color}
         strokeWidth={strokeWidth}
-        strokeDasharray={connection.type === 'trigger' ? '5,5' : 'none'}
+        strokeDasharray={connection.type === 'trigger' ? '6,3' : 'none'}
         markerEnd="url(#arrowhead)"
         className="transition-all duration-300"
+        strokeLinecap="round"
       />
     </g>
   );
@@ -473,33 +504,41 @@ const SystemArchitectureMap = () => {
   }, [flowView, showUI]);
 
   return (
-    <div className="h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col overflow-hidden">
-      {/* Clean Header */}
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 flex flex-col overflow-hidden">
+      {/* Background pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgb(0 0 0 / 0.05) 1px, transparent 1px)`,
+          backgroundSize: '40px 40px'
+        }} />
+      </div>
+      
+      {/* Enhanced Header */}
       {showUI && (
-        <div className="bg-white border-b shadow-sm z-50">
-          <div className="px-4 py-3">
+        <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-sm z-50">
+          <div className="px-6 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-1.5 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg">
-                  <Layers className="w-5 h-5 text-white" />
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl shadow-lg">
+                  <Layers className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-gray-900">PCI Pharma Services</h1>
-                  <p className="text-xs text-gray-600">Master Execution Tracker Architecture</p>
+                  <h1 className="text-xl font-bold text-gray-900 tracking-tight">PCI Pharma Services</h1>
+                  <p className="text-sm text-gray-600 font-medium">Master Execution Tracker Architecture</p>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 {/* Flow View Toggle */}
                 <button
                   onClick={() => {
                     setFlowView(!flowView);
                     if (!flowView) setFocusedFlow(null);
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-1.5 ${
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center space-x-2 ${
                     flowView 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl' 
+                      : 'bg-gray-100/80 text-gray-700 hover:bg-gray-200/80'
                   }`}
                 >
                   <Workflow className="w-4 h-4" />
@@ -509,19 +548,19 @@ const SystemArchitectureMap = () => {
                 {/* Help Button */}
                 <button
                   onClick={() => setShowHelp(!showHelp)}
-                  className="p-1.5 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100"
+                  className="p-2 text-gray-600 hover:text-gray-900 rounded-xl hover:bg-gray-100/80 transition-all"
                   title="Help (H key)"
                 >
-                  <HelpCircle className="w-4 h-4" />
+                  <HelpCircle className="w-5 h-5" />
                 </button>
                 
                 {/* UI Toggle */}
                 <button
                   onClick={() => setShowUI(!showUI)}
-                  className="p-1.5 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100"
+                  className="p-2 text-gray-600 hover:text-gray-900 rounded-xl hover:bg-gray-100/80 transition-all"
                   title="Toggle UI (U key)"
                 >
-                  {showUI ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showUI ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
@@ -529,33 +568,34 @@ const SystemArchitectureMap = () => {
           
           {/* Flow Selector */}
           {flowView && (
-            <div className="px-4 py-2 bg-gray-50 border-t">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs font-medium text-gray-600">Flow:</span>
+            <div className="px-6 py-3 bg-gradient-to-r from-gray-50/50 to-gray-100/50 border-t border-gray-200/50">
+              <div className="flex items-center space-x-3">
+                <span className="text-sm font-semibold text-gray-700">Flow:</span>
                 <button
                   onClick={() => setFocusedFlow(null)}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
                     focusedFlow === null 
-                      ? 'bg-gray-700 text-white' 
-                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                      ? 'bg-gray-800 text-white shadow-md' 
+                      : 'bg-white/80 text-gray-700 hover:bg-gray-100/80 shadow-sm'
                   }`}
                 >
-                  All
+                  All Systems
                 </button>
                 {Object.entries(FLOW_TYPES).map(([key, config]) => (
                   <button
                     key={key}
                     onClick={() => setFocusedFlow(key)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center space-x-1.5 ${
                       focusedFlow === key 
-                        ? 'text-white' 
-                        : 'bg-white text-gray-700 hover:bg-gray-100'
+                        ? 'text-white shadow-md' 
+                        : 'bg-white/80 text-gray-700 hover:bg-gray-100/80 shadow-sm'
                     }`}
                     style={{
                       backgroundColor: focusedFlow === key ? config.color : undefined
                     }}
                   >
-                    {config.label}
+                    {config.icon}
+                    <span>{config.label}</span>
                   </button>
                 ))}
               </div>
@@ -566,14 +606,15 @@ const SystemArchitectureMap = () => {
 
       {/* Main Content */}
       <div className="flex-1 relative">
-        {/* Subtle section indicators */}
+        {/* Section indicators with improved styling */}
         {showUI && (
-          <div className="absolute top-2 left-0 right-0 flex justify-around px-8 pointer-events-none z-20">
-            <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Input</span>
-            <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Process</span>
-            <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Master</span>
-            <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Reports</span>
-            <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Output</span>
+          <div className="absolute top-4 left-0 right-0 flex justify-around px-12 pointer-events-none z-20">
+            {['Input', 'Process', 'Master', 'Reports', 'Output'].map((label, idx) => (
+              <div key={label} className="flex flex-col items-center">
+                <div className="h-0.5 w-16 bg-gradient-to-r from-transparent via-gray-300 to-transparent mb-2" />
+                <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{label}</span>
+              </div>
+            ))}
           </div>
         )}
 
@@ -582,15 +623,18 @@ const SystemArchitectureMap = () => {
           <defs>
             <marker
               id="arrowhead"
-              markerWidth="8"
-              markerHeight="6"
-              refX="7"
-              refY="3"
+              markerWidth="10"
+              markerHeight="8"
+              refX="9"
+              refY="4"
               orient="auto"
               fill="currentColor"
             >
-              <polygon points="0 0, 8 3, 0 6" opacity="0.6" />
+              <polygon points="0 0, 10 4, 0 8" opacity="0.7" />
             </marker>
+            <filter id="blur">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
+            </filter>
           </defs>
           
           {visibleConnections.map(connection => {
@@ -631,85 +675,113 @@ const SystemArchitectureMap = () => {
           />
         ))}
 
-        {/* Selected Node Details */}
+        {/* Enhanced Selected Node Details */}
         {selectedNode && showUI && (
-          <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-xl border border-gray-200 p-4 max-w-xs z-40">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-gray-900">{getNode(selectedNode)?.name}</h3>
+          <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200/50 p-5 max-w-sm z-40 animate-slide-up">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center space-x-3">
+                <div 
+                  className="p-2 rounded-xl"
+                  style={{ backgroundColor: `${getNode(selectedNode)?.color}15` }}
+                >
+                  <div style={{ color: getNode(selectedNode)?.color }}>
+                    {React.cloneElement(getNode(selectedNode)?.icon || <Info />, { className: 'w-5 h-5' })}
+                  </div>
+                </div>
+                <h3 className="font-bold text-gray-900 text-lg">{getNode(selectedNode)?.name}</h3>
+              </div>
               <button
                 onClick={() => setSelectedNode(null)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-lg"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-sm text-gray-600 mb-3">{getNode(selectedNode)?.description || 'System component'}</p>
-            <div className="text-xs space-y-1">
-              <div className="font-medium text-gray-700 mb-1">Connections:</div>
-              {connections.filter(c => c.from === selectedNode).map((c, i) => (
-                <div key={i} className="text-gray-600 pl-2">→ {getNode(c.to)?.name}</div>
-              ))}
-              {connections.filter(c => c.to === selectedNode).map((c, i) => (
-                <div key={i} className="text-gray-600 pl-2">← {getNode(c.from)?.name}</div>
-              ))}
+            <p className="text-sm text-gray-600 mb-4 leading-relaxed">{getNode(selectedNode)?.description || 'System component'}</p>
+            <div className="space-y-3">
+              <div>
+                <div className="font-semibold text-gray-700 text-xs uppercase tracking-wider mb-2">Data Flow</div>
+                <div className="space-y-1.5">
+                  {connections.filter(c => c.from === selectedNode).map((c, i) => (
+                    <div key={i} className="text-sm text-gray-600 pl-3 flex items-center space-x-2">
+                      <div className="w-1 h-1 bg-blue-500 rounded-full" />
+                      <span>→ {getNode(c.to)?.name}</span>
+                    </div>
+                  ))}
+                  {connections.filter(c => c.to === selectedNode).map((c, i) => (
+                    <div key={i} className="text-sm text-gray-600 pl-3 flex items-center space-x-2">
+                      <div className="w-1 h-1 bg-green-500 rounded-full" />
+                      <span>← {getNode(c.from)?.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Minimal Legend */}
+        {/* Enhanced Legend */}
         {showUI && (
-          <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-3 z-40">
-            <div className="text-xs space-y-1">
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-0.5 bg-green-500"></div>
-                <span className="text-gray-600">Direct Edit</span>
+          <div className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200/50 p-4 z-40">
+            <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">Connection Types</h4>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-0.5 bg-gradient-to-r from-green-400 to-green-600 rounded-full"></div>
+                <span className="text-xs text-gray-600 font-medium">Direct Edit</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-0.5 bg-blue-500"></div>
-                <span className="text-gray-600">Copy/Move</span>
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-0.5 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full"></div>
+                <span className="text-xs text-gray-600 font-medium">Copy/Move</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-0.5 bg-teal-500"></div>
-                <span className="text-gray-600">Live Filter</span>
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-0.5 bg-gradient-to-r from-teal-400 to-teal-600 rounded-full"></div>
+                <span className="text-xs text-gray-600 font-medium">Live Filter</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-0.5 border-t-2 border-dashed border-red-500"></div>
-                <span className="text-gray-600">Trigger</span>
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-0.5 border-t-2 border-dashed border-red-500"></div>
+                <span className="text-xs text-gray-600 font-medium">Trigger</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* Help Modal */}
+        {/* Enhanced Help Modal */}
         {showHelp && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">System Overview</h3>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg mx-4 animate-slide-up">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">System Overview</h3>
                 <button
                   onClick={() => setShowHelp(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-xl"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="space-y-4 text-sm text-gray-600">
+              <div className="space-y-6 text-gray-600">
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-1">Architecture</h4>
-                  <p>The Master Execution Tracker is the central database connecting all systems. Data flows from input teams through the master database to reports and dashboards.</p>
+                  <h4 className="font-bold text-gray-900 mb-2 text-lg">Architecture</h4>
+                  <p className="leading-relaxed">The Master Execution Tracker is the central database connecting all systems. Data flows from input teams through the master database to reports and dashboards.</p>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-1">Flow View</h4>
-                  <p>Enable Flow View to see how data moves through specific workflows. Select Production, Quality, or Business flow to highlight relevant components.</p>
+                  <h4 className="font-bold text-gray-900 mb-2 text-lg">Flow View</h4>
+                  <p className="leading-relaxed">Enable Flow View to see how data moves through specific workflows. Select Production, Quality, or Business flow to highlight relevant components.</p>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-1">Shortcuts</h4>
-                  <ul className="space-y-1">
-                    <li>• <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">F</kbd> - Toggle Flow View</li>
-                    <li>• <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">H</kbd> - Toggle Help</li>
-                    <li>• <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">U</kbd> - Toggle UI</li>
-                    <li>• <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">Esc</kbd> - Clear Selection</li>
-                  </ul>
+                  <h4 className="font-bold text-gray-900 mb-3 text-lg">Keyboard Shortcuts</h4>
+                  <div className="space-y-2 bg-gray-50 rounded-xl p-4">
+                    {[
+                      { key: 'F', desc: 'Toggle Flow View' },
+                      { key: 'H', desc: 'Toggle Help' },
+                      { key: 'U', desc: 'Toggle UI' },
+                      { key: 'Esc', desc: 'Clear Selection' }
+                    ].map(({ key, desc }) => (
+                      <div key={key} className="flex items-center space-x-3">
+                        <kbd className="px-2 py-1 bg-white border border-gray-300 rounded-lg text-xs font-mono font-semibold shadow-sm">{key}</kbd>
+                        <span className="text-sm">{desc}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -717,7 +789,7 @@ const SystemArchitectureMap = () => {
         )}
       </div>
 
-      {/* CSS for animations */}
+      {/* Enhanced CSS for animations */}
       <style jsx>{`
         @keyframes ping {
           75%, 100% {
@@ -739,8 +811,29 @@ const SystemArchitectureMap = () => {
             opacity: .5;
           }
         }
-        .scale-102 {
-          transform: scale(1.02) translate(-50%, -50%);
+        @keyframes slide-up {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
         }
       `}</style>
     </div>
